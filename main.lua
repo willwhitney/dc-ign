@@ -1,21 +1,17 @@
---Tejas Kulkarni (tejask@mit.edu | tejasdkulkarni@gmail.com)
--- Unsupervised Face Synthesis (Conv encoder + decoder)
--- Usage: OMP_NUM_THREADS=1 th main.lua -t 1 -s log 
---so far: th main.lua -t 1 -s log_l20.0001 -p --coefL2 0.0001
-
---OMP_NUM_THREADS=1 th main.lua -t 1 -r 0.01 --coefL2 0.001 -f 1 -d ../../PASCAL3D/combined/ -p
-
-require 'cunn'
-require 'pl'
-require 'paths'
-require 'optim'
-require 'gnuplot'
-require 'math'
+require 'sys'
+require 'xlua'
+require 'torch'
+require 'nn'
 require 'rmsprop'
-require 'cudnn'
-require 'nnx'
-require("UnPooling.lua")
-require 'image'
+
+require 'KLDCriterion'
+
+require 'LinearCR'
+require 'Reparametrize'
+require 'cutorch'
+require 'cunn'
+require 'optim' 
+
 
 ----------------------------------------------------------------------
 -- parse command-line options
@@ -47,16 +43,9 @@ end
 torch.setnumthreads(opt.threads)
 print('<torch> set nb of threads to ' .. torch.getnumthreads())
 
--- use floats, for SGD
-if opt.optimization == 'SGD' then
-   torch.setdefaulttensortype('torch.FloatTensor')
-end
+opt.cuda = true
 
--- batch size?
-if opt.optimization == 'LBFGS' and opt.batchSize < 100 then
-   error('LBFGS should not be used with small mini-batches; 1000 is a recommended')
-end
-
+torch.manualSeed(1)
 
 bsize = 50
 imwidth = 150
@@ -70,248 +59,125 @@ function load_batch(id, mode)
 end
 
 function init_network()
-  local vnet
-  
-  UMAPS =  6
+ -- Model Specific parameters
+  filter_size = 5
+  dim_hidden = 30*2
+  input_size = 32*2
+  pad1 = 2
+  pad2 = 2
+  colorchannels = 1
+  total_output_size = colorchannels * input_size ^ 2
+  feature_maps = 16*2
+  hidden_dec = 25*2
+  map_size = 16*2
+  factor = 2
+  encoder = nn.Sequential()
+  encoder:add(nn.SpatialZeroPadding(pad1,pad2,pad1,pad2))
+  encoder:add(nn.SpatialConvolutionMM(colorchannels,feature_maps,filter_size,filter_size))
+  encoder:add(nn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+  encoder:add(nn.Reshape(feature_maps * map_size * map_size))
+  local z = nn.ConcatTable()
+  z:add(nn.LinearCR(feature_maps * map_size * map_size, dim_hidden))
+  z:add(nn.LinearCR(feature_maps * map_size * map_size, dim_hidden))
+  encoder:add(z)
+  local decoder = nn.Sequential()
+  decoder:add(nn.LinearCR(dim_hidden, feature_maps * map_size * map_size))
+  decoder:add(nn.Threshold(0,1e-6))
+  --Reshape and transpose in order to upscale
+  decoder:add(nn.Reshape(bsize, feature_maps, map_size, map_size))
+  decoder:add(nn.Transpose({2,3},{3,4}))
+  --Reshape and compute upscale with hidden dimensions
+  decoder:add(nn.Reshape(map_size * map_size * bsize, feature_maps))
+  decoder:add(nn.LinearCR(feature_maps,hidden_dec))
+  decoder:add(nn.Threshold(0,1e-6))
+  decoder:add(nn.LinearCR(hidden_dec,colorchannels*factor*factor))
+  decoder:add(nn.Sigmoid())
+  decoder:add(nn.Reshape(bsize,1,input_size,input_size))
 
-  vnet = nn.Sequential()
-  -------------- ENCODER ---------------
-  vnet:add(cudnn.SpatialConvolution(3,UMAPS,11,11,2,2,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS,UMAPS/2,5,5,2,2,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,3,3,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,3,3,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/3,3,3,2,2,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
-
-  vnet:add(nn.View((UMAPS/3)*16*16))
-  vnet:add(nn.Dropout(0.0))
-  vnet:add(nn.Linear((UMAPS/3)*16*16, 1024))
-  vnet:add(cudnn.ReLU())
-
-  -------------- DECODER ---------------
-  vnet:add(nn.Dropout(0.0))
-  vnet:add(nn.Linear(1024, (UMAPS/3)*16*16))
-  vnet:add(cudnn.ReLU())
-
-  vnet:add(nn.View(UMAPS/3,16,16))
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS/3,UMAPS/2,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(nn.UnPooling(2))
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(nn.UnPooling(2))
-
-  vnet:add(cudnn.SpatialConvolution(UMAPS,3,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(nn.UnPooling(2))
-
-  --]]
-  vnet:cuda()  
+  model = nn.Sequential()
+  model:add(encoder)
+  model:add(nn.Reparametrize(dim_hidden))
+  model:add(decoder)
+    
+  model:cuda()  
   collectgarbage()
-  return vnet
+  return model
 end
 
-
-
-function test_fw_back(model)
-  res=model:forward(training['X'][1]:cuda())
-  print(res:size())
-  print('Y Size:', training['Y'][1]:size())
-  rev=model:backward(training['X'][1]:cuda(),  training['Y'][1]:cuda())
-  print(rev:size())
-end
 
 model = init_network()
--- test_fw_back(model)
-print(model)
-parameters,gradParameters = model:getParameters()
-
-criterion = nn.MSECriterion():float()
-
--- log results to files
-trainLogger = optim.Logger(paths.concat(opt.save, 'train.log'))
-testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
-reconstruction = 0
 
 
+if continuous then
+    criterion = nn.GaussianCriterion()
+else
+    criterion = nn.BCECriterion()
+    criterion.sizeAverage = false
+end
 
-rmsGradAverages = {
-  m1W = 1,
-  m1b = 1,
-  m4W = 1,
-  m4b = 1,
-  m7W = 1,
-  m7b = 1,
-  m9W = 1,
-  m9b = 1,
-  m11W = 1,
-  m11b = 1,
-  
-  m16W = 1,
-  m16b = 1,
-  
-  m19W = 1,
-  m19b = 1,
-  
-  m22W = 1,
-  m22b = 1,
-  m25W = 1,
-  m25b = 1,
-  m27W = 1,
-  m27b = 1,
-  m29W = 1,
-  m29b = 1,
-  m32W = 1,
-  m32b = 1,   
-}
+KLD = nn.KLDCriterion()
+KLD.sizeAverage = false
 
-learning_rate = 0.05
---training function
-function train()
-   -- epoch tracker
-   epoch = epoch or 1
-
-   -- local vars
-   local time = sys.clock()
-
-   -- if math.fmod(epoch+1, 50) == 0 then
-   --  opt.learningRate = opt.learningRate*0.5
-   -- end
-   reconstruction = 0
-   -- do one epoch
-   print('<trainer> on training set:')
-   print("<trainer> online epoch # " .. epoch .. ' [batchSize = ' .. bsize .. ']')
-   for t = 1, num_train_batches do
-      -- create mini batch
-      local raw_inputs = load_batch(t, 'training')
-      local targets = raw_inputs
-
-      inputs = raw_inputs:cuda()
-
-      -- optimize on current mini-batch
-      RMSProp = false
-      if RMSProp then
-        gradParameters:zero()
-        -- evaluate function for complete mini batch
-        local outputs = model:forward(inputs)
-        outputs = outputs:float()
-        local f = criterion:forward(outputs, targets)
-        
-        reconstruction = reconstruction + f
-
-        -- estimate df/dW
-        local df_do = criterion:backward(outputs, targets)
-        model:backward(inputs, df_do:cuda())
-
-        -- Stochastic RMSProp on separate layers
-        model.modules[1].weight = rmsprop(model.modules[1].weight, model.modules[1].gradWeight,  rmsGradAverages.m1W)
-        model.modules[1].bias = rmsprop(model.modules[1].bias, model.modules[1].gradBias,  rmsGradAverages.m1b)
-
-        model.modules[4].weight = rmsprop(model.modules[4].weight, model.modules[4].gradWeight, rmsGradAverages.m4W)
-        model.modules[4].bias = rmsprop(model.modules[4].bias, model.modules[4].gradBias,  rmsGradAverages.m4b)
-
-        model.modules[7].weight = rmsprop(model.modules[7].weight, model.modules[7].gradWeight, rmsGradAverages.m7W)
-        model.modules[7].bias = rmsprop(model.modules[7].bias, model.modules[7].gradBias,  rmsGradAverages.m7b)
-
-        model.modules[9].weight = rmsprop(model.modules[9].weight, model.modules[9].gradWeight, rmsGradAverages.m9W)
-        model.modules[9].bias = rmsprop(model.modules[9].bias, model.modules[9].gradBias,  rmsGradAverages.m9b)
-
-        model.modules[11].weight = rmsprop(model.modules[11].weight, model.modules[11].gradWeight, rmsGradAverages.m11W)
-        model.modules[11].bias = rmsprop(model.modules[11].bias, model.modules[11].gradBias,  rmsGradAverages.m11b)
-     
-        model.modules[16].weight = rmsprop(model.modules[16].weight, model.modules[16].gradWeight, rmsGradAverages.m16W)
-        model.modules[16].bias = rmsprop(model.modules[16].bias, model.modules[16].gradBias,  rmsGradAverages.m16b)
-
-        model.modules[19].weight = rmsprop(model.modules[19].weight, model.modules[19].gradWeight, rmsGradAverages.m19W)
-        model.modules[19].bias = rmsprop(model.modules[19].bias, model.modules[19].gradBias,  rmsGradAverages.m19b)
-
-        model.modules[22].weight = rmsprop(model.modules[22].weight, model.modules[22].gradWeight, rmsGradAverages.m22W)
-        model.modules[22].bias = rmsprop(model.modules[22].bias, model.modules[22].gradBias,  rmsGradAverages.m22b)
-
-        model.modules[25].weight = rmsprop(model.modules[25].weight, model.modules[25].gradWeight, rmsGradAverages.m25W)
-        model.modules[25].bias = rmsprop(model.modules[25].bias, model.modules[25].gradBias,  rmsGradAverages.m25b)
-
-        model.modules[27].weight = rmsprop(model.modules[27].weight, model.modules[27].gradWeight, rmsGradAverages.m27W)
-        model.modules[27].bias = rmsprop(model.modules[27].bias, model.modules[27].gradBias,  rmsGradAverages.m27b)
-
-        model.modules[29].weight = rmsprop(model.modules[29].weight, model.modules[29].gradWeight, rmsGradAverages.m29W)
-        model.modules[29].bias = rmsprop(model.modules[29].bias, model.modules[29].gradBias,  rmsGradAverages.m29b)
-
-        model.modules[32].weight = rmsprop(model.modules[32].weight, model.modules[32].gradWeight, rmsGradAverages.m32W)
-        model.modules[32].bias = rmsprop(model.modules[32].bias, model.modules[32].gradBias,  rmsGradAverages.m32b)
-      else
-
-        local outputs = model:forward(inputs)
-        outputs = outputs:float()
-        -- feed it to the neural network and the criterion
-        local f = criterion:forward(outputs, targets)
-        reconstruction = reconstruction + f
-        -- (1) zero the accumulation of the gradients
-        model:zeroGradParameters()
-        -- (2) accumulate gradients
-        local df_do = criterion:backward(outputs, targets)
-        model:backward(inputs, df_do:cuda())
-        -- (3) update parameters with a 0.01 learning rate
-        model:updateParameters(learning_rate)
-
-      end
-      -- disp progress
-      xlua.progress(t, num_train_batches)
-   end
-   
-   -- time taken
-   time = sys.clock() - time
-   time = time / num_train_batches
-   print("<trainer> time to learn 1 sample = " .. (time*1000) .. 'ms')
-
-   -- print confusion matrix
-   reconstruction = reconstruction / ((num_train_batches))
-   print('mean MSE (train set):', reconstruction)
-   trainLogger:add{['% mean MSE (train set)'] = reconstruction}
-   reconstruction=0
-
-   -- save/log current net
-   if math.fmod(epoch, 5) ==0 then
-     local filename = paths.concat(opt.save, 'vxnet.net')
-     os.execute('mkdir -p ' .. sys.dirname(filename))
-     if paths.filep(filename) then
-        os.execute('mv ' .. filename .. ' ' .. filename .. '.old')
-     end
-     print('<trainer> saving network to '..filename)
-     torch.save(filename, model)
-   end
-   
-   -- next epoch
-   epoch = epoch + 1
+if opt.cuda then
+    criterion:cuda()
+    KLD:cuda()
+    model:cuda()
 end
 
 
+parameters, gradients = model:getParameters()
+
+config = {
+    learningRate = -0.001,
+    momentumDecay = 0.1,
+    updateDecay = 0.01
+}
+
+function getLowerbound(data)
+    local lowerbound = 0
+    N_data = data:size(1) - (data:size(1) % batchSize)
+    for i = 1, N_data, batchSize do
+        local batch = data[{{i,i+batchSize-1},{}}]
+        local f = model:forward(batch)
+        local target = target or batch.new()
+        target:resizeAs(f):copy(batch)
+        local err = - criterion:forward(f, target)
+
+        local encoder_output = model:get(1).output
+
+        local KLDerr = KLD:forward(encoder_output, target)
+
+        lowerbound = lowerbound + err + KLDerr
+    end
+    return lowerbound
+end
+
+
+if opt.continue == true then 
+    print("Loading old weights!")
+    lowerboundlist = torch.load(opt.save ..        '/lowerbound.t7')
+    lowerbound_test_list =  torch.load(opt.save .. '/lowerbound_test.t7')
+    state = torch.load(opt.save .. '/state.t7')
+    p = torch.load(opt.save .. '/parameters.t7')
+
+    parameters:copy(p)
+
+    epoch = lowerboundlist:size(1)
+else
+    epoch = 0
+    state = {}
+end
+
+testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
+reconstruction = 0
 
 -- test function
 function testf()
    -- local vars
    local time = sys.clock()
-
    -- test over given dataset
    print('<trainer> on testing Set:')
-
    reconstruction = 0
 
    for t = 1,num_test_batches do
@@ -333,8 +199,6 @@ function testf()
         torch.save('tmp/preds', preds)
       end
    end
-
-
    -- timing
    time = sys.clock() - time
    time = time / num_test_batches
@@ -348,25 +212,88 @@ function testf()
 end
 
 
-----------------------------------------------------------------------
--- and train!
---
-
-tcounter = 0
 while true do
-   -- train/test
-  train()
-  if math.fmod(tcounter,3) == 0 then
-    testf()
-  end
-  tcounter = tcounter + 1
+    epoch = epoch + 1
+    local lowerbound = 0
+    local time = sys.clock()
 
- -- plot errors
- if opt.plot then
-    trainLogger:style{['% mean class accuracy (train set)'] = '-'}
-    testLogger:style{['% mean class accuracy (test set)'] = '-'}
-    trainLogger:plot()
-    testLogger:plot()
- end
+    for i = 1,num_train_batches do
+        xlua.progress(i, num_train_batches)
+
+        --Prepare Batch
+        local batch = load_batch(i,'training')
+      
+         if opt.cuda then
+            batch = batch:cuda()
+        end 
+
+        --Optimization function
+        local opfunc = function(x)
+            collectgarbage()
+
+            if x ~= parameters then
+                parameters:copy(x)
+            end
+
+            model:zeroGradParameters()
+            local f = model:forward(batch)
+
+            local target = target or batch.new()
+            target:resizeAs(f):copy(batch)
+
+            local err = - criterion:forward(f, target)
+            local df_dw = criterion:backward(f, target):mul(-1)
+
+            model:backward(batch,df_dw)
+            local encoder_output = model:get(1).output
+
+            local KLDerr = KLD:forward(encoder_output, target)
+            local dKLD_dw = KLD:backward(encoder_output, target)
+
+            encoder:backward(batch,dKLD_dw)
+
+            local lowerbound = err  + KLDerr
+
+            if opt.verbose then
+                print("BCE",err/batch:size(1))
+                print("KLD", KLDerr/batch:size(1))
+                print("lowerbound", lowerbound/batch:size(1))
+            end
+
+            return lowerbound, gradients 
+        end
+
+        x, batchlowerbound = rmsprop(opfunc, parameters, config, state)
+
+        lowerbound = lowerbound + batchlowerbound[1]
+    end
+
+    print("Epoch: " .. epoch .. " Lowerbound: " .. lowerbound/num_train_batches .. " time: " .. sys.clock() - time)
+
+    --Keep track of the lowerbound over time
+    if lowerboundlist then
+        lowerboundlist = torch.cat(lowerboundlist,torch.Tensor(1,1):fill(lowerbound/num_train_batches),1)
+    else
+        lowerboundlist = torch.Tensor(1,1):fill(lowerbound/num_train_batches)
+    end
+
+    testf()
+    --Compute the lowerbound of the test set and save it
+    -- if epoch % 2 == 0 then
+    --     lowerbound_test = getLowerbound(testData.data)
+
+    --      if lowerbound_test_list then
+    --         lowerbound_test_list = torch.cat(lowerbound_test_list,torch.Tensor(1,1):fill(lowerbound_test/num_test_batches),1)
+    --     else
+    --         lowerbound_test_list = torch.Tensor(1,1):fill(lowerbound_test/num_test_batches)
+    --     end
+
+    --     print('testlowerbound = ' .. lowerbound_test/num_test_batches)
+
+    --     --Save everything to be able to restart later
+    --     torch.save(opt.save .. '/parameters.t7', parameters)
+    --     torch.save(opt.save .. '/state.t7', state)
+    --     torch.save(opt.save .. '/lowerbound.t7', torch.Tensor(lowerboundlist))
+    --     torch.save(opt.save .. '/lowerbound_test.t7', torch.Tensor(lowerbound_test_list))
+    -- end
 end
---]]
