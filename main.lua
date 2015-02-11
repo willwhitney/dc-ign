@@ -15,7 +15,7 @@ require 'rmsprop'
 require 'cudnn'
 require 'nnx'
 require("UnPooling.lua")
-
+require 'image'
 
 ----------------------------------------------------------------------
 -- parse command-line options
@@ -61,101 +61,64 @@ end
 bsize = 50
 imwidth = 150
 
-TOTALFACES = 5231
-num_train_batches = 5000
+TOTALFACES = 1000--5230
+num_train_batches = 950--5000
 num_test_batches =  TOTALFACES-num_train_batches
 
--- if PRELOAD == 1 then
---   training = torch.load('face_dataset_training')
---   test = torch.load('face_dataset_test')
---   num_train_batches = training:size()[1]
---   num_test_batches = test:size()[1]
--- else
---   --load all batches
---   -- training = {}; training['X'] = {}; training['Y'] = {}
---   -- validation = {}; validation['X'] = {}; validation['Y'] = {}
---   -- test = {}; test['X'] = {}; test['Y'] = {};
-
---   basedir = '../facemachine/CNN_DATASET/'
-
---   TOTALFACES = 5231
---   num_train_batches = 5000
---   num_test_batches =  TOTALFACES-num_train_batches
-  
---   training = torch.Tensor(num_train_batches, bsize, 3, imwidth, imwidth)
---   test = torch.Tensor(num_test_batches, bsize, 3, imwidth, imwidth)
-
---   for i=1,num_train_batches do
---     print(i, '/', num_train_batches)
---     local t = mattorch.load(basedir .. 'face_' .. i .. '/data' .. '.mat' )
---     t = t.img:reshape(bsize, 3, imwidth, imwidth):float()/255
---     t = torch.Tensor(t:size()):copy(t)
---     training[i] = t
---   end
-
---   for i=1,num_test_batches do
---     local FID = i + num_train_batches
---     local t = mattorch.load(basedir .. 'face_' .. FID .. '/data' .. '.mat' )
---     t = t.img:reshape(bsize, 3, imwidth, imwidth):float()/255
---     t = torch.Tensor(t:size()):copy(t)
---     test[i] = t
---   end
--- end
-
-function load_batch(id)
-    basedir = '../facemachine/CNN_DATASET/'
-    local t = mattorch.load(basedir .. 'face_' .. id .. '/data' .. '.mat' )
-    t = t.img:reshape(bsize, 3, imwidth, imwidth):float()/255
-    t = torch.Tensor(t:size()):copy(t)
-    return t
+function load_batch(id, mode)
+  return torch.load('DATASET/th_' .. mode .. '/batch' .. id)
 end
 
 function init_network()
   local vnet
   
+  UMAPS =  24
+
   vnet = nn.Sequential()
   -------------- ENCODER ---------------
-  vnet:add(cudnn.SpatialConvolution(3,32,11,11,2,2,1,1))
+  vnet:add(cudnn.SpatialConvolution(3,UMAPS,11,11,2,2,1,1))
   vnet:add(cudnn.ReLU())
   vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
 
-  vnet:add(cudnn.SpatialConvolution(32,16,5,5,2,2,1,1))
+  vnet:add(cudnn.SpatialConvolution(UMAPS,UMAPS/2,5,5,2,2,1,1))
   vnet:add(cudnn.ReLU())
   vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
 
-  vnet:add(cudnn.SpatialConvolution(16,16,3,3,1,1,1,1))
+  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,3,3,1,1,1,1))
   vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialConvolution(16,16,3,3,1,1,1,1))
+  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,3,3,1,1,1,1))
   vnet:add(cudnn.ReLU())
 
-  vnet:add(cudnn.SpatialConvolution(16,8,3,3,2,2,1,1))
+  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/3,3,3,2,2,1,1))
   vnet:add(cudnn.ReLU())
   vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
 
-  vnet:add(nn.View(8*16*16))
-  vnet:add(nn.Linear(8*16*16, 1024))
+  vnet:add(nn.View((UMAPS/3)*16*16))
+  vnet:add(nn.Dropout(0.5))
+  vnet:add(nn.Linear((UMAPS/3)*16*16, 1024))
   vnet:add(cudnn.ReLU())
 
   -------------- DECODER ---------------
-  vnet:add(nn.Linear(1024, 8*16*16))
+  vnet:add(nn.Dropout(0.5))
+  vnet:add(nn.Linear(1024, (UMAPS/3)*16*16))
   vnet:add(cudnn.ReLU())
 
-  vnet:add(nn.View(8,16,16))
+  vnet:add(nn.View(UMAPS/3,16,16))
 
-  vnet:add(cudnn.SpatialConvolution(8,16,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(nn.SpatialUpSamplingNearest(2))
-
-  vnet:add(cudnn.SpatialConvolution(16,16,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-  vnet:add(cudnn.SpatialConvolution(16,16,2,2,1,1,1,1))
-  vnet:add(cudnn.ReLU())
-
-  vnet:add(cudnn.SpatialConvolution(16,32,2,2,1,1,1,1))
+  vnet:add(cudnn.SpatialConvolution(UMAPS/3,UMAPS/2,2,2,1,1,1,1))
   vnet:add(cudnn.ReLU())
   vnet:add(nn.SpatialUpSamplingNearest(2))
 
-  vnet:add(cudnn.SpatialConvolution(32,3,2,2,1,1,1,1))
+  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,2,2,1,1,1,1))
+  vnet:add(cudnn.ReLU())
+  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,2,2,1,1,1,1))
+  vnet:add(cudnn.ReLU())
+
+  vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS,2,2,1,1,1,1))
+  vnet:add(cudnn.ReLU())
+  vnet:add(nn.SpatialUpSamplingNearest(2))
+
+  vnet:add(cudnn.SpatialConvolution(UMAPS,3,2,2,1,1,1,1))
   vnet:add(cudnn.ReLU())
   vnet:add(nn.SpatialUpSamplingNearest(2))
 
@@ -177,7 +140,7 @@ end
 
 model = init_network()
 -- test_fw_back(model)
-
+print(model)
 parameters,gradParameters = model:getParameters()
 
 criterion = nn.MSECriterion():float()
@@ -201,22 +164,22 @@ rmsGradAverages = {
   m11W = 1,
   m11b = 1,
   
-  m15W = 1,
-  m15b = 1,
+  m16W = 1,
+  m16b = 1,
   
-  m17W = 1,
-  m17b = 1,
+  m19W = 1,
+  m19b = 1,
   
-  m20W = 1,
-  m20b = 1,
-  m23W = 1,
-  m23b = 1,
+  m22W = 1,
+  m22b = 1,
   m25W = 1,
   m25b = 1,
   m27W = 1,
   m27b = 1,
-  m30W = 1,
-  m30b = 1,   
+  m29W = 1,
+  m29b = 1,
+  m32W = 1,
+  m32b = 1,   
 }
 
 --training function
@@ -236,7 +199,7 @@ function train()
    print("<trainer> online epoch # " .. epoch .. ' [batchSize = ' .. bsize .. ']')
    for t = 1, num_train_batches do
       -- create mini batch
-      local raw_inputs = load_batch(t)
+      local raw_inputs = load_batch(t, 'training')
       local targets = raw_inputs
 
       inputs = raw_inputs:cuda()
@@ -270,18 +233,15 @@ function train()
 
       model.modules[11].weight = rmsprop(model.modules[11].weight, model.modules[11].gradWeight, rmsGradAverages.m11W)
       model.modules[11].bias = rmsprop(model.modules[11].bias, model.modules[11].gradBias,  rmsGradAverages.m11b)
+   
+      model.modules[16].weight = rmsprop(model.modules[16].weight, model.modules[16].gradWeight, rmsGradAverages.m16W)
+      model.modules[16].bias = rmsprop(model.modules[16].bias, model.modules[16].gradBias,  rmsGradAverages.m16b)
 
-      model.modules[15].weight = rmsprop(model.modules[15].weight, model.modules[15].gradWeight, rmsGradAverages.m15W)
-      model.modules[15].bias = rmsprop(model.modules[15].bias, model.modules[15].gradBias,  rmsGradAverages.m15b)
+      model.modules[19].weight = rmsprop(model.modules[19].weight, model.modules[19].gradWeight, rmsGradAverages.m19W)
+      model.modules[19].bias = rmsprop(model.modules[19].bias, model.modules[19].gradBias,  rmsGradAverages.m19b)
 
-      model.modules[17].weight = rmsprop(model.modules[17].weight, model.modules[17].gradWeight, rmsGradAverages.m17W)
-      model.modules[17].bias = rmsprop(model.modules[17].bias, model.modules[17].gradBias,  rmsGradAverages.m17b)
-
-      model.modules[20].weight = rmsprop(model.modules[20].weight, model.modules[20].gradWeight, rmsGradAverages.m20W)
-      model.modules[20].bias = rmsprop(model.modules[20].bias, model.modules[20].gradBias,  rmsGradAverages.m20b)
-
-      model.modules[23].weight = rmsprop(model.modules[23].weight, model.modules[23].gradWeight, rmsGradAverages.m23W)
-      model.modules[23].bias = rmsprop(model.modules[23].bias, model.modules[23].gradBias,  rmsGradAverages.m23b)
+      model.modules[22].weight = rmsprop(model.modules[22].weight, model.modules[22].gradWeight, rmsGradAverages.m22W)
+      model.modules[22].bias = rmsprop(model.modules[22].bias, model.modules[22].gradBias,  rmsGradAverages.m22b)
 
       model.modules[25].weight = rmsprop(model.modules[25].weight, model.modules[25].gradWeight, rmsGradAverages.m25W)
       model.modules[25].bias = rmsprop(model.modules[25].bias, model.modules[25].gradBias,  rmsGradAverages.m25b)
@@ -289,8 +249,11 @@ function train()
       model.modules[27].weight = rmsprop(model.modules[27].weight, model.modules[27].gradWeight, rmsGradAverages.m27W)
       model.modules[27].bias = rmsprop(model.modules[27].bias, model.modules[27].gradBias,  rmsGradAverages.m27b)
 
-      model.modules[30].weight = rmsprop(model.modules[30].weight, model.modules[30].gradWeight, rmsGradAverages.m30W)
-      model.modules[30].bias = rmsprop(model.modules[30].bias, model.modules[30].gradBias,  rmsGradAverages.m30b)
+      model.modules[29].weight = rmsprop(model.modules[29].weight, model.modules[29].gradWeight, rmsGradAverages.m29W)
+      model.modules[29].bias = rmsprop(model.modules[29].bias, model.modules[29].gradBias,  rmsGradAverages.m29b)
+
+      model.modules[32].weight = rmsprop(model.modules[32].weight, model.modules[32].gradWeight, rmsGradAverages.m32W)
+      model.modules[32].bias = rmsprop(model.modules[32].bias, model.modules[32].gradBias,  rmsGradAverages.m32b)
 
       -- disp progress
       xlua.progress(t, num_train_batches)
@@ -309,7 +272,7 @@ function train()
    reconstruction=0
 
    -- save/log current net
-   if math.fmod(epoch, 10) ==0 then
+   if math.fmod(epoch, 5) ==0 then
      local filename = paths.concat(opt.save, 'vxnet.net')
      os.execute('mkdir -p ' .. sys.dirname(filename))
      if paths.filep(filename) then
@@ -337,7 +300,7 @@ function testf()
 
    for t = 1,num_test_batches do
       -- create mini batch
-      local raw_inputs = load_batch(t + num_train_batches)
+      local raw_inputs = load_batch(t, 'test')
       local targets = raw_inputs
 
       inputs = raw_inputs:cuda()
@@ -349,7 +312,12 @@ function testf()
       preds = preds:float()
 
       reconstruction = reconstruction + torch.sum(torch.pow(preds-targets,2))
+      
+      if t == 1 then
+        torch.save('tmp/preds', preds)
+      end
    end
+
 
    -- timing
    time = sys.clock() - time
@@ -368,21 +336,20 @@ end
 -- and train!
 --
 
--- torch.save('face_dataset_training', training)
--- torch.save('face_dataset_test', test)
-
-
+tcounter = 0
 while true do
    -- train/test
-   train()
-   testf()
+  train()
+  if math.fmod(tcounter,5) == 0 then
+    testf()
+  end
 
-   -- plot errors
-   if opt.plot then
-      trainLogger:style{['% mean class accuracy (train set)'] = '-'}
-      testLogger:style{['% mean class accuracy (test set)'] = '-'}
-      trainLogger:plot()
-      testLogger:plot()
-   end
+ -- plot errors
+ if opt.plot then
+    trainLogger:style{['% mean class accuracy (train set)'] = '-'}
+    testLogger:style{['% mean class accuracy (test set)'] = '-'}
+    trainLogger:plot()
+    testLogger:plot()
+ end
 end
 --]]
