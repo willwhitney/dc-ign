@@ -72,7 +72,7 @@ end
 function init_network()
   local vnet
   
-  UMAPS =  24
+  UMAPS =  6
 
   vnet = nn.Sequential()
   -------------- ENCODER ---------------
@@ -94,12 +94,12 @@ function init_network()
   vnet:add(cudnn.SpatialMaxPooling(2,2,1,1))
 
   vnet:add(nn.View((UMAPS/3)*16*16))
-  vnet:add(nn.Dropout(0.5))
+  vnet:add(nn.Dropout(0.0))
   vnet:add(nn.Linear((UMAPS/3)*16*16, 1024))
   vnet:add(cudnn.ReLU())
 
   -------------- DECODER ---------------
-  vnet:add(nn.Dropout(0.5))
+  vnet:add(nn.Dropout(0.0))
   vnet:add(nn.Linear(1024, (UMAPS/3)*16*16))
   vnet:add(cudnn.ReLU())
 
@@ -107,7 +107,7 @@ function init_network()
 
   vnet:add(cudnn.SpatialConvolution(UMAPS/3,UMAPS/2,2,2,1,1,1,1))
   vnet:add(cudnn.ReLU())
-  vnet:add(nn.SpatialUpSamplingNearest(2))
+  vnet:add(nn.UnPooling(2))
 
   vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS/2,2,2,1,1,1,1))
   vnet:add(cudnn.ReLU())
@@ -116,11 +116,11 @@ function init_network()
 
   vnet:add(cudnn.SpatialConvolution(UMAPS/2,UMAPS,2,2,1,1,1,1))
   vnet:add(cudnn.ReLU())
-  vnet:add(nn.SpatialUpSamplingNearest(2))
+  vnet:add(nn.UnPooling(2))
 
   vnet:add(cudnn.SpatialConvolution(UMAPS,3,2,2,1,1,1,1))
   vnet:add(cudnn.ReLU())
-  vnet:add(nn.SpatialUpSamplingNearest(2))
+  vnet:add(nn.UnPooling(2))
 
   --]]
   vnet:cuda()  
@@ -182,6 +182,7 @@ rmsGradAverages = {
   m32b = 1,   
 }
 
+learning_rate = 0.05
 --training function
 function train()
    -- epoch tracker
@@ -193,7 +194,7 @@ function train()
    -- if math.fmod(epoch+1, 50) == 0 then
    --  opt.learningRate = opt.learningRate*0.5
    -- end
-
+   reconstruction = 0
    -- do one epoch
    print('<trainer> on training set:')
    print("<trainer> online epoch # " .. epoch .. ' [batchSize = ' .. bsize .. ']')
@@ -205,59 +206,74 @@ function train()
       inputs = raw_inputs:cuda()
 
       -- optimize on current mini-batch
+      RMSProp = false
+      if RMSProp then
+        gradParameters:zero()
+        -- evaluate function for complete mini batch
+        local outputs = model:forward(inputs)
+        outputs = outputs:float()
+        local f = criterion:forward(outputs, targets)
+        
+        reconstruction = reconstruction + f
 
-      gradParameters:zero()
-      -- evaluate function for complete mini batch
-      local outputs = model:forward(inputs)
-      outputs = outputs:float()
-      local f = criterion:forward(outputs, targets)
-      
-      reconstruction = reconstruction + f
+        -- estimate df/dW
+        local df_do = criterion:backward(outputs, targets)
+        model:backward(inputs, df_do:cuda())
 
-      -- estimate df/dW
-      local df_do = criterion:backward(outputs, targets)
-      model:backward(inputs, df_do:cuda())
+        -- Stochastic RMSProp on separate layers
+        model.modules[1].weight = rmsprop(model.modules[1].weight, model.modules[1].gradWeight,  rmsGradAverages.m1W)
+        model.modules[1].bias = rmsprop(model.modules[1].bias, model.modules[1].gradBias,  rmsGradAverages.m1b)
 
-      -- Stochastic RMSProp on separate layers
-      model.modules[1].weight = rmsprop(model.modules[1].weight, model.modules[1].gradWeight,  rmsGradAverages.m1W)
-      model.modules[1].bias = rmsprop(model.modules[1].bias, model.modules[1].gradBias,  rmsGradAverages.m1b)
+        model.modules[4].weight = rmsprop(model.modules[4].weight, model.modules[4].gradWeight, rmsGradAverages.m4W)
+        model.modules[4].bias = rmsprop(model.modules[4].bias, model.modules[4].gradBias,  rmsGradAverages.m4b)
 
-      model.modules[4].weight = rmsprop(model.modules[4].weight, model.modules[4].gradWeight, rmsGradAverages.m4W)
-      model.modules[4].bias = rmsprop(model.modules[4].bias, model.modules[4].gradBias,  rmsGradAverages.m4b)
+        model.modules[7].weight = rmsprop(model.modules[7].weight, model.modules[7].gradWeight, rmsGradAverages.m7W)
+        model.modules[7].bias = rmsprop(model.modules[7].bias, model.modules[7].gradBias,  rmsGradAverages.m7b)
 
-      model.modules[7].weight = rmsprop(model.modules[7].weight, model.modules[7].gradWeight, rmsGradAverages.m7W)
-      model.modules[7].bias = rmsprop(model.modules[7].bias, model.modules[7].gradBias,  rmsGradAverages.m7b)
+        model.modules[9].weight = rmsprop(model.modules[9].weight, model.modules[9].gradWeight, rmsGradAverages.m9W)
+        model.modules[9].bias = rmsprop(model.modules[9].bias, model.modules[9].gradBias,  rmsGradAverages.m9b)
 
-      model.modules[9].weight = rmsprop(model.modules[9].weight, model.modules[9].gradWeight, rmsGradAverages.m9W)
-      model.modules[9].bias = rmsprop(model.modules[9].bias, model.modules[9].gradBias,  rmsGradAverages.m9b)
+        model.modules[11].weight = rmsprop(model.modules[11].weight, model.modules[11].gradWeight, rmsGradAverages.m11W)
+        model.modules[11].bias = rmsprop(model.modules[11].bias, model.modules[11].gradBias,  rmsGradAverages.m11b)
+     
+        model.modules[16].weight = rmsprop(model.modules[16].weight, model.modules[16].gradWeight, rmsGradAverages.m16W)
+        model.modules[16].bias = rmsprop(model.modules[16].bias, model.modules[16].gradBias,  rmsGradAverages.m16b)
 
-      model.modules[11].weight = rmsprop(model.modules[11].weight, model.modules[11].gradWeight, rmsGradAverages.m11W)
-      model.modules[11].bias = rmsprop(model.modules[11].bias, model.modules[11].gradBias,  rmsGradAverages.m11b)
-   
-      model.modules[16].weight = rmsprop(model.modules[16].weight, model.modules[16].gradWeight, rmsGradAverages.m16W)
-      model.modules[16].bias = rmsprop(model.modules[16].bias, model.modules[16].gradBias,  rmsGradAverages.m16b)
+        model.modules[19].weight = rmsprop(model.modules[19].weight, model.modules[19].gradWeight, rmsGradAverages.m19W)
+        model.modules[19].bias = rmsprop(model.modules[19].bias, model.modules[19].gradBias,  rmsGradAverages.m19b)
 
-      model.modules[19].weight = rmsprop(model.modules[19].weight, model.modules[19].gradWeight, rmsGradAverages.m19W)
-      model.modules[19].bias = rmsprop(model.modules[19].bias, model.modules[19].gradBias,  rmsGradAverages.m19b)
+        model.modules[22].weight = rmsprop(model.modules[22].weight, model.modules[22].gradWeight, rmsGradAverages.m22W)
+        model.modules[22].bias = rmsprop(model.modules[22].bias, model.modules[22].gradBias,  rmsGradAverages.m22b)
 
-      model.modules[22].weight = rmsprop(model.modules[22].weight, model.modules[22].gradWeight, rmsGradAverages.m22W)
-      model.modules[22].bias = rmsprop(model.modules[22].bias, model.modules[22].gradBias,  rmsGradAverages.m22b)
+        model.modules[25].weight = rmsprop(model.modules[25].weight, model.modules[25].gradWeight, rmsGradAverages.m25W)
+        model.modules[25].bias = rmsprop(model.modules[25].bias, model.modules[25].gradBias,  rmsGradAverages.m25b)
 
-      model.modules[25].weight = rmsprop(model.modules[25].weight, model.modules[25].gradWeight, rmsGradAverages.m25W)
-      model.modules[25].bias = rmsprop(model.modules[25].bias, model.modules[25].gradBias,  rmsGradAverages.m25b)
+        model.modules[27].weight = rmsprop(model.modules[27].weight, model.modules[27].gradWeight, rmsGradAverages.m27W)
+        model.modules[27].bias = rmsprop(model.modules[27].bias, model.modules[27].gradBias,  rmsGradAverages.m27b)
 
-      model.modules[27].weight = rmsprop(model.modules[27].weight, model.modules[27].gradWeight, rmsGradAverages.m27W)
-      model.modules[27].bias = rmsprop(model.modules[27].bias, model.modules[27].gradBias,  rmsGradAverages.m27b)
+        model.modules[29].weight = rmsprop(model.modules[29].weight, model.modules[29].gradWeight, rmsGradAverages.m29W)
+        model.modules[29].bias = rmsprop(model.modules[29].bias, model.modules[29].gradBias,  rmsGradAverages.m29b)
 
-      model.modules[29].weight = rmsprop(model.modules[29].weight, model.modules[29].gradWeight, rmsGradAverages.m29W)
-      model.modules[29].bias = rmsprop(model.modules[29].bias, model.modules[29].gradBias,  rmsGradAverages.m29b)
+        model.modules[32].weight = rmsprop(model.modules[32].weight, model.modules[32].gradWeight, rmsGradAverages.m32W)
+        model.modules[32].bias = rmsprop(model.modules[32].bias, model.modules[32].gradBias,  rmsGradAverages.m32b)
+      else
 
-      model.modules[32].weight = rmsprop(model.modules[32].weight, model.modules[32].gradWeight, rmsGradAverages.m32W)
-      model.modules[32].bias = rmsprop(model.modules[32].bias, model.modules[32].gradBias,  rmsGradAverages.m32b)
+        local outputs = model:forward(inputs)
+        outputs = outputs:float()
+        -- feed it to the neural network and the criterion
+        local f = criterion:forward(outputs, targets)
+        reconstruction = reconstruction + f
+        -- (1) zero the accumulation of the gradients
+        model:zeroGradParameters()
+        -- (2) accumulate gradients
+        local df_do = criterion:backward(outputs, targets)
+        model:backward(inputs, df_do:cuda())
+        -- (3) update parameters with a 0.01 learning rate
+        model:updateParameters(learning_rate)
 
+      end
       -- disp progress
       xlua.progress(t, num_train_batches)
-
    end
    
    -- time taken
@@ -340,9 +356,10 @@ tcounter = 0
 while true do
    -- train/test
   train()
-  if math.fmod(tcounter,5) == 0 then
+  if math.fmod(tcounter,3) == 0 then
     testf()
   end
+  tcounter = tcounter + 1
 
  -- plot errors
  if opt.plot then
