@@ -11,8 +11,10 @@ require 'Reparametrize'
 require 'cutorch'
 require 'cunn'
 require 'optim' 
-
-
+require 'GaussianCriterion'
+require 'testf'
+require 'utils'
+require 'config'
 ----------------------------------------------------------------------
 -- parse command-line options
 --
@@ -45,76 +47,25 @@ print('<torch> set nb of threads to ' .. torch.getnumthreads())
 
 opt.cuda = true
 
-torch.manualSeed(1)
+-- torch.manualSeed(1)
 
-bsize = 50
-imwidth = 150
 
-TOTALFACES = 1000--5230
-num_train_batches = 950--5000
-num_test_batches =  TOTALFACES-num_train_batches
+model = init_network2()
 
-function load_batch(id, mode)
-  return torch.load('DATASET/th_' .. mode .. '/batch' .. id)
+function test_fw_back(model)
+  res=model:forward(load_batch(1,'training'):cuda())
+  print(res:size())
+  rev=model:backward(load_batch(1,'training'):cuda(), load_batch(1,'training'):cuda())
+   print(rev:size())
 end
 
-function init_network()
- -- Model Specific parameters
-  filter_size = 5
-  dim_hidden = 30*2
-  input_size = 32*2
-  pad1 = 2
-  pad2 = 2
-  colorchannels = 1
-  total_output_size = colorchannels * input_size ^ 2
-  feature_maps = 16*2
-  hidden_dec = 25*2
-  map_size = 16*2
-  factor = 2
-  encoder = nn.Sequential()
-  encoder:add(nn.SpatialZeroPadding(pad1,pad2,pad1,pad2))
-  encoder:add(nn.SpatialConvolutionMM(colorchannels,feature_maps,filter_size,filter_size))
-  encoder:add(nn.SpatialMaxPooling(2,2,2,2))
-  encoder:add(nn.Threshold(0,1e-6))
-  encoder:add(nn.Reshape(feature_maps * map_size * map_size))
-  local z = nn.ConcatTable()
-  z:add(nn.LinearCR(feature_maps * map_size * map_size, dim_hidden))
-  z:add(nn.LinearCR(feature_maps * map_size * map_size, dim_hidden))
-  encoder:add(z)
-  local decoder = nn.Sequential()
-  decoder:add(nn.LinearCR(dim_hidden, feature_maps * map_size * map_size))
-  decoder:add(nn.Threshold(0,1e-6))
-  --Reshape and transpose in order to upscale
-  decoder:add(nn.Reshape(bsize, feature_maps, map_size, map_size))
-  decoder:add(nn.Transpose({2,3},{3,4}))
-  --Reshape and compute upscale with hidden dimensions
-  decoder:add(nn.Reshape(map_size * map_size * bsize, feature_maps))
-  decoder:add(nn.LinearCR(feature_maps,hidden_dec))
-  decoder:add(nn.Threshold(0,1e-6))
-  decoder:add(nn.LinearCR(hidden_dec,colorchannels*factor*factor))
-  decoder:add(nn.Sigmoid())
-  decoder:add(nn.Reshape(bsize,1,input_size,input_size))
+-- test_fw_back(model)
 
-  model = nn.Sequential()
-  model:add(encoder)
-  model:add(nn.Reparametrize(dim_hidden))
-  model:add(decoder)
-    
-  model:cuda()  
-  collectgarbage()
-  return model
-end
+-- criterion = nn.MSECriterion() -- does not work well at all
+-- criterion = nn.GaussianCriterion()
 
-
-model = init_network()
-
-
-if continuous then
-    criterion = nn.GaussianCriterion()
-else
-    criterion = nn.BCECriterion()
-    criterion.sizeAverage = false
-end
+criterion = nn.BCECriterion()
+criterion.sizeAverage = false
 
 KLD = nn.KLDCriterion()
 KLD.sizeAverage = false
@@ -128,30 +79,6 @@ end
 
 parameters, gradients = model:getParameters()
 
-config = {
-    learningRate = -0.001,
-    momentumDecay = 0.1,
-    updateDecay = 0.01
-}
-
-function getLowerbound(data)
-    local lowerbound = 0
-    N_data = data:size(1) - (data:size(1) % batchSize)
-    for i = 1, N_data, batchSize do
-        local batch = data[{{i,i+batchSize-1},{}}]
-        local f = model:forward(batch)
-        local target = target or batch.new()
-        target:resizeAs(f):copy(batch)
-        local err = - criterion:forward(f, target)
-
-        local encoder_output = model:get(1).output
-
-        local KLDerr = KLD:forward(encoder_output, target)
-
-        lowerbound = lowerbound + err + KLDerr
-    end
-    return lowerbound
-end
 
 
 if opt.continue == true then 
@@ -172,44 +99,6 @@ end
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0
 
--- test function
-function testf()
-   -- local vars
-   local time = sys.clock()
-   -- test over given dataset
-   print('<trainer> on testing Set:')
-   reconstruction = 0
-
-   for t = 1,num_test_batches do
-      -- create mini batch
-      local raw_inputs = load_batch(t, 'test')
-      local targets = raw_inputs
-
-      inputs = raw_inputs:cuda()
-      -- disp progress
-      xlua.progress(t, num_test_batches)
-
-      -- test samples
-      local preds = model:forward(inputs)
-      preds = preds:float()
-
-      reconstruction = reconstruction + torch.sum(torch.pow(preds-targets,2))
-      
-      if t == 1 then
-        torch.save('tmp/preds', preds)
-      end
-   end
-   -- timing
-   time = sys.clock() - time
-   time = time / num_test_batches
-   print("<trainer> time to test 1 sample = " .. (time*1000) .. 'ms')
-
-   -- print confusion matrix
-   reconstruction = reconstruction / (bsize * num_test_batches * 3 * 150 * 150)
-   print('mean MSE error (test set)', reconstruction)
-   testLogger:add{['% mean class accuracy (test set)'] = reconstruction}
-   reconstruction = 0
-end
 
 
 while true do
@@ -250,6 +139,7 @@ while true do
             local KLDerr = KLD:forward(encoder_output, target)
             local dKLD_dw = KLD:backward(encoder_output, target)
 
+            -- print(encoder_output)
             encoder:backward(batch,dKLD_dw)
 
             local lowerbound = err  + KLDerr
@@ -268,7 +158,7 @@ while true do
         lowerbound = lowerbound + batchlowerbound[1]
     end
 
-    print("Epoch: " .. epoch .. " Lowerbound: " .. lowerbound/num_train_batches .. " time: " .. sys.clock() - time)
+    print("\nEpoch: " .. epoch .. " Lowerbound: " .. lowerbound/num_train_batches .. " time: " .. sys.clock() - time)
 
     --Keep track of the lowerbound over time
     if lowerboundlist then
@@ -277,7 +167,19 @@ while true do
         lowerboundlist = torch.Tensor(1,1):fill(lowerbound/num_train_batches)
     end
 
-    testf()
+
+   -- save/log current net
+   if math.fmod(epoch, 2) ==0 then
+     local filename = paths.concat(opt.save, 'vxnet.net')
+     os.execute('mkdir -p ' .. sys.dirname(filename))
+     if paths.filep(filename) then
+        os.execute('mv ' .. filename .. ' ' .. filename .. '.old')
+     end
+     print('<trainer> saving network to '..filename)
+     torch.save(filename, model)
+   end
+
+    testf(false)
     --Compute the lowerbound of the test set and save it
     -- if epoch % 2 == 0 then
     --     lowerbound_test = getLowerbound(testData.data)
@@ -297,3 +199,5 @@ while true do
     --     torch.save(opt.save .. '/lowerbound_test.t7', torch.Tensor(lowerbound_test_list))
     -- end
 end
+
+--]]
