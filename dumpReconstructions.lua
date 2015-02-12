@@ -14,6 +14,6 @@ require 'testf'
 require 'utils'
 require 'config'
 
-model = torch.load('logs_all_BCE/vxnet.net')
+model = torch.load('logs_new/vxnet.net')
 
 testf(true)

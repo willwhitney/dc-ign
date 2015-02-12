@@ -1,3 +1,4 @@
+*.mat
 tmp
 RESULTS
 log*

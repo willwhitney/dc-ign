@@ -50,16 +50,17 @@ opt.cuda = true
 -- torch.manualSeed(1)
 
 
-model = init_network2()
 
 function test_fw_back(model)
   res=model:forward(load_batch(1,'training'):cuda())
   print(res:size())
-  rev=model:backward(load_batch(1,'training'):cuda(), load_batch(1,'training'):cuda())
-   print(rev:size())
+  -- rev=model:backward(load_batch(1,'training'):cuda(), load_batch(1,'training'):cuda())
+   -- print(rev:size())
 end
+model = init_network2()
 
--- test_fw_back(model)
+--test_fw_back(model)
+
 
 -- criterion = nn.MSECriterion() -- does not work well at all
 -- criterion = nn.GaussianCriterion()
