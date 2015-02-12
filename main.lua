@@ -198,6 +198,12 @@ while true do
     --     torch.save(opt.save .. '/lowerbound.t7', torch.Tensor(lowerboundlist))
     --     torch.save(opt.save .. '/lowerbound_test.t7', torch.Tensor(lowerbound_test_list))
     -- end
+
+   -- plot errors
+   if opt.plot then
+      testLogger:style{['% mean class accuracy (test set)'] = '-'}
+      testLogger:plot()
+   end
 end
 
 --]]
