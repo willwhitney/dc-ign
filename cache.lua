@@ -50,7 +50,7 @@ function cache(id, mode)
     if COLOR==true then
       torch.save('DATASET/th_color_' .. mode .. '/batch' .. id, batch:float())
     else
-      torch.save('DATASET/th_gray_' .. mode .. '/batch' .. id, batch:float())
+      torch.save('DATASET/th_' .. mode .. '/batch' .. id, batch:float())
     end  
 end
 
