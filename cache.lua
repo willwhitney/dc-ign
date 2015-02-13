@@ -13,10 +13,10 @@ require 'image'
 
 
 bsize = 50
-imwidth = 150
+imwidth = 64
 
 
-COLOR = true
+COLOR = false
 
 TOTALFACES = 5230
 num_train_batches = 5000

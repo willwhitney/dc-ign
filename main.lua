@@ -35,13 +35,13 @@ local opt = lapp[[
    -f,--fbmat         (default 0)           load fb.mattorch      
    -c,--color         (default 0)           color or not 
 ]]
-
+--[[
 if opt.fbmat == 1 then
   mattorch = require('fb.mattorch')
 else
   require 'mattorch'
 end
-
+]]
 -- threads
 torch.setnumthreads(opt.threads)
 print('<torch> set nb of threads to ' .. torch.getnumthreads())
