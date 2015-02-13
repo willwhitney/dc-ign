@@ -8,7 +8,7 @@ function testf(saveAll)
 
    for t = 1,num_test_batches do
       -- create mini batch
-      local raw_inputs = load_batch(t, 'test')
+      local raw_inputs = load_batch(t, MODE_TEST)
       local targets = raw_inputs
 
       inputs = raw_inputs:cuda()

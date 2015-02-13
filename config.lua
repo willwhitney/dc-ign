@@ -121,6 +121,135 @@ end
 
 
 
+function init_network2_color_width64()
+ -- Model Specific parameters
+  filter_size = 5
+  dim_hidden = 300
+  feature_maps = 64
+  colorchannels = 3
+
+  encoder = nn.Sequential()
+
+  encoder:add(cudnn.SpatialConvolution(colorchannels,feature_maps,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  encoder:add(cudnn.SpatialConvolution(feature_maps,feature_maps/2,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+
+  encoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps/4,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  encoder:add(nn.Reshape((feature_maps/4)*15*15))  
+
+  local z = nn.ConcatTable()
+  z:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
+  z:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
+  encoder:add(z)
+
+  decoder = nn.Sequential()
+  decoder:add(nn.LinearCR(dim_hidden, (feature_maps/4)*23*23 ))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(nn.Reshape((feature_maps/4),23,23))  
+  
+  -- decoder:add(nn.SpatialUpSamplingNearest(2))
+  
+  decoder:add(cudnn.SpatialConvolution(feature_maps/4,feature_maps/2,filter_size,filter_size))
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(nn.Threshold(0,1e-6))
+
+
+  decoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps,filter_size,filter_size))
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(cudnn.SpatialConvolution(feature_maps,colorchannels,filter_size,filter_size))
+  decoder:add(cudnn.Sigmoid())
+
+  model = nn.Sequential()
+  model:add(encoder)
+  model:add(nn.Reparametrize(dim_hidden))
+  model:add(decoder)
+    
+  model:cuda()  
+  collectgarbage()
+  return model
+end
+
+
+
+
+
+function init_network2_color_width150()
+ -- Model Specific parameters
+  filter_size = 5
+  dim_hidden = 500
+  feature_maps = 64
+  colorchannels = 3
+
+  encoder = nn.Sequential()
+
+  encoder:add(cudnn.SpatialConvolution(colorchannels,feature_maps,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  encoder:add(cudnn.SpatialConvolution(feature_maps,feature_maps/2,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+
+  encoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps/4,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  encoder:add(nn.Reshape((feature_maps/4)*15*15))  
+  
+  encoder:add(nn.LinearCR((feature_maps/4)*15*15, 1024))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  local z = nn.ConcatTable()
+  z:add(nn.LinearCR(1024, dim_hidden))
+  z:add(nn.LinearCR(1024, dim_hidden))
+  encoder:add(z)
+
+  decoder = nn.Sequential()
+
+  decoder:add(nn.LinearCR(dim_hidden, 1024 ))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(nn.Reshape(1, 32, 32 ))
+  decoder:add(cudnn.SpatialConvolution(1,feature_maps/2, 9, 9))
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(nn.Threshold(0,1e-6))
+  
+  decoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps/2, 8, 8))
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps, 5, 5))
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(cudnn.SpatialConvolution(feature_maps,colorchannels, 7, 7))
+  decoder:add(cudnn.Sigmoid())
+
+  model = nn.Sequential()
+  model:add(encoder)
+  model:add(nn.Reparametrize(dim_hidden))
+  model:add(decoder)
+    
+  model:cuda()  
+  collectgarbage()
+  return model
+end
+
+
+
+
 function init_network3()
  -- Model Specific parameters
   filter_size = 5

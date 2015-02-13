@@ -32,7 +32,8 @@ local opt = lapp[[
    -t,--threads       (default 4)           number of threads
    --dumpTest                                preloads model and dumps .mat for test
    -d,--datasrc       (default "")          data source directory
-   -f,--fbmat         (default 0)           load fb.mattorch       
+   -f,--fbmat         (default 0)           load fb.mattorch      
+   -c,--color         (default 0)           color or not 
 ]]
 
 if opt.fbmat == 1 then
@@ -49,17 +50,27 @@ opt.cuda = true
 
 -- torch.manualSeed(1)
 
+if opt.color == 1 then
+  MODE_TRAINING = 'color_training'
+  MODE_TEST = 'color_test'
+else
+  MODE_TRAINING = 'training'
+  MODE_TEST = 'test'
+end
 
 
 function test_fw_back(model)
-  res=model:forward(load_batch(1,'training'):cuda())
+  print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
+  res=model:forward(load_batch(1,MODE_TRAINING):cuda())
   print(res:size())
-  -- rev=model:backward(load_batch(1,'training'):cuda(), load_batch(1,'training'):cuda())
-   -- print(rev:size())
+  rev=model:backward(load_batch(1,MODE_TRAINING):cuda(), load_batch(1,MODE_TRAINING):cuda())
+   print(rev:size())
 end
-model = init_network2()
 
---test_fw_back(model)
+model = init_network2_color_width150()
+
+-- test_fw_back(model)
+
 
 
 -- criterion = nn.MSECriterion() -- does not work well at all
@@ -111,7 +122,7 @@ while true do
         xlua.progress(i, num_train_batches)
 
         --Prepare Batch
-        local batch = load_batch(i,'training')
+        local batch = load_batch(i, MODE_TRAINING)
       
          if opt.cuda then
             batch = batch:cuda()
