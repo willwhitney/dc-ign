@@ -95,16 +95,14 @@ function init_network2()
   decoder:add(nn.Reshape((feature_maps/2),13,13))  
   
   decoder:add(nn.SpatialUpSamplingNearest(2))
-  
   decoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps,filter_size,filter_size))
-  decoder:add(nn.SpatialUpSamplingNearest(2))
   decoder:add(nn.Threshold(0,1e-6))
 
-
+  decoder:add(nn.SpatialUpSamplingNearest(2))
   decoder:add(cudnn.SpatialConvolution(feature_maps,feature_maps/2,2*filter_size,2*filter_size))
-  decoder:add(nn.SpatialUpSamplingNearest(2))
   decoder:add(nn.Threshold(0,1e-6))
 
+  decoder:add(nn.SpatialUpSamplingNearest(2))
   decoder:add(cudnn.SpatialConvolution(feature_maps/2,1,7,7))
   decoder:add(cudnn.Sigmoid())
 
@@ -119,6 +117,67 @@ function init_network2()
 end
 
 
+
+function init_network2_150()
+ -- Model Specific parameters
+  filter_size = 5
+  dim_hidden = 200
+  feature_maps = 32
+  colorchannels = 1
+
+  encoder = nn.Sequential()
+
+  encoder:add(cudnn.SpatialConvolution(colorchannels,feature_maps,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  encoder:add(cudnn.SpatialConvolution(feature_maps,feature_maps/2,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+
+  encoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps/4,filter_size,filter_size))
+  encoder:add(cudnn.SpatialMaxPooling(2,2,2,2))
+  encoder:add(nn.Threshold(0,1e-6))
+
+  encoder:add(nn.Reshape((feature_maps/4)*15*15))  
+
+  local z = nn.ConcatTable()
+  z:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
+  z:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
+  encoder:add(z)
+
+  decoder = nn.Sequential()
+  decoder:add(nn.LinearCR(dim_hidden, (feature_maps/4)*15*15 ))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(nn.Reshape((feature_maps/4),15,15))  
+  
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(cudnn.SpatialConvolution(feature_maps/4,feature_maps/2, 7, 7))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(cudnn.SpatialConvolution(feature_maps/2,feature_maps,7,7))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(cudnn.SpatialConvolution(feature_maps,feature_maps,7,7))
+  decoder:add(nn.Threshold(0,1e-6))
+
+  decoder:add(nn.SpatialUpSamplingNearest(2))
+  decoder:add(cudnn.SpatialConvolution(feature_maps,1,7,7))
+  decoder:add(cudnn.Sigmoid())
+
+  model = nn.Sequential()
+  model:add(encoder)
+  model:add(nn.Reparametrize(dim_hidden))
+  model:add(decoder)
+    
+  model:cuda()  
+  collectgarbage()
+  return model
+end
 
 
 function init_network2_color_width64()

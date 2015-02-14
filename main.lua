@@ -59,15 +59,18 @@ else
 end
 
 
+
+-- model = init_network2_color_width150()
+-- model = init_network2_150()
+model = init_network2_150()
+
 function test_fw_back(model)
   print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
   res=model:forward(load_batch(1,MODE_TRAINING):cuda())
   print(res:size())
-  rev=model:backward(load_batch(1,MODE_TRAINING):cuda(), load_batch(1,MODE_TRAINING):cuda())
-   print(rev:size())
+  -- rev=model:backward(load_batch(1,MODE_TRAINING):cuda(), load_batch(1,MODE_TRAINING):cuda())
+  --  print(rev:size())
 end
-
-model = init_network2_color_width150()
 
 -- test_fw_back(model)
 
@@ -127,7 +130,7 @@ while true do
          if opt.cuda then
             batch = batch:cuda()
         end 
-
+        
         --Optimization function
         local opfunc = function(x)
             collectgarbage()
@@ -181,7 +184,7 @@ while true do
 
 
    -- save/log current net
-   if math.fmod(epoch, 2) ==0 then
+   if true then --math.fmod(epoch, 2) ==0 then
      local filename = paths.concat(opt.save, 'vxnet.net')
      os.execute('mkdir -p ' .. sys.dirname(filename))
      if paths.filep(filename) then

@@ -23,8 +23,8 @@ for item, i in zip(tr, range(96)):
 db_dir = base_dir+'images_wbg/'
 prediction = np.ndarray(shape=(96))
 distance = np.ndarray(shape=(96))
-train_features = np.ndarray(shape=(96, 60*2))
-test_features = np.ndarray(shape=(96, 60*2))
+train_features = np.ndarray(shape=(96, 200))
+test_features = np.ndarray(shape=(96, 200))
 
 mean_features = scipy.io.loadmat('mean.mat')
 mean_features = np.transpose(mean_features['x'])
@@ -34,9 +34,9 @@ sigma_features =  np.transpose(sigma_features['x'])
 
 counter=0
 for i in range(96):
-	train_features[i,:] = np.hstack((mean_features[counter,:], sigma_features[counter,:]))
+	train_features[i,:] = mean_features[counter,:]#np.hstack((mean_features[counter,:], sigma_features[counter,:]))
 	counter+=1
-	test_features[i,:] = np.hstack((mean_features[counter,:], sigma_features[counter,:]))
+	test_features[i,:] = mean_features[counter,:]#np.hstack((mean_features[counter,:], sigma_features[counter,:]))
 	counter+=1
 	# train_image = db_dir+'pair_'+str(i+1)+'_0.png'
 	# test_image = db_dir+'pair_'+str(i+1)+'_1.png'

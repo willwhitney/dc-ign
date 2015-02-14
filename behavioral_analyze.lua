@@ -16,11 +16,11 @@ require 'utils'
 require 'config'
 require 'image'
 
-model = torch.load('logs_new/vxnet.net')
+model = torch.load('logs_init_network2_150/vxnet.net')
 
 
 COLOR = false
-imwidth = 64
+imwidth = 150
 batch = torch.zeros(96*2,1,imwidth,imwidth)  
 cnt=1
 for id=1,96 do
@@ -47,12 +47,13 @@ for id=1,96 do
 	end
 end
 
-
+print(model)
 res = model:forward(batch:cuda())
 
-mean = model.modules[1].modules[8].modules[1].output:double()
-sigma = model.modules[1].modules[8].modules[1].output:double()
-
+mean = model.modules[1].modules[11].modules[1].output:double()
+sigma = model.modules[1].modules[11].modules[2].output:double()
+-- mean = model.modules[3].modules[2].output:double()
+print(mean:size())
 require 'mattorch'
 mattorch.save('analyzeBehavioral/mean.mat', mean)
 mattorch.save('analyzeBehavioral/sigma.mat', sigma)

@@ -13,7 +13,7 @@ require 'image'
 
 
 bsize = 50
-imwidth = 64
+imwidth = 150
 
 
 COLOR = false
