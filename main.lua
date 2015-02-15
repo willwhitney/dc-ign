@@ -1,3 +1,4 @@
+-- Continue: th main.lua -t 1 -u 1 -n logs_init_network2_150/params.t7 -s logs_init_network2_150_run2
 require 'sys'
 require 'xlua'
 require 'torch'
