@@ -122,7 +122,7 @@ function init_network2_150()
  -- Model Specific parameters
   filter_size = 5
   dim_hidden = 200
-  feature_maps = 32*3
+  feature_maps = 32
   colorchannels = 1
 
   encoder = nn.Sequential()

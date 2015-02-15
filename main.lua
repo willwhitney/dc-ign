@@ -60,6 +60,7 @@ else
 end
 
 
+print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
 
 -- model = init_network2_color_width150()
 -- model = init_network2_150()
@@ -94,22 +95,21 @@ end
 
 
 parameters, gradients = model:getParameters()
-
-
-
-if opt.reuse then 
-    print("Loading old weights!")
-    model = torch.load(opt.network)
-    print(opt.network)
-    parameters, gradients = model:getParameters()
-    epoch = 0
-    state = {}
+if opt.reuse == 1 then 
+    print("Loading old parameters!")
+    -- model = torch.load(opt.network)
+    parameters = torch.load(opt.network)
+    -- parameters, gradients = model:getParameters()
 end
+
+print('Num of parameters:', #parameters)
+
+epoch = 0
+state = {}
+    
 
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0
-
-
 
 while true do
     epoch = epoch + 1
@@ -144,12 +144,15 @@ while true do
             local df_dw = criterion:backward(f, target):mul(-1)
 
             model:backward(batch,df_dw)
+            -- local encoder_output = model.modules[1].modules[11].output 
             local encoder_output = model:get(1).output
 
             local KLDerr = KLD:forward(encoder_output, target)
             local dKLD_dw = KLD:backward(encoder_output, target)
 
             -- print(encoder_output)
+            -- print(batch:size())
+
             encoder:backward(batch,dKLD_dw)
 
             local lowerbound = err  + KLDerr
