@@ -1,8 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=cache
-#SBATCH --output=slurm_cache.out
-#SBATCH --error=slurm_cache.err
+#SBATCH --job-name=log150g001_R2
+#SBATCH --output=log150g001_R2.out
+#SBATCH --error=log150g001_R2.err
 
-
-th cache.lua
-#OMP_NUM_THREADS=1 th main.lua -t 1 -s logs_150rgb
+#th cache.lua
+th main.lua -t1 -u1 --network log150g001/vxnet.net  -slog150g001_R2

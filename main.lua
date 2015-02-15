@@ -34,6 +34,7 @@ local opt = lapp[[
    -d,--datasrc       (default "")          data source directory
    -f,--fbmat         (default 0)           load fb.mattorch      
    -c,--color         (default 0)           color or not 
+   -u,--reuse	      (default 0)           reuse existing network weights
 ]]
 --[[
 if opt.fbmat == 1 then
@@ -96,17 +97,11 @@ parameters, gradients = model:getParameters()
 
 
 
-if opt.continue == true then 
+if opt.reuse then 
     print("Loading old weights!")
-    lowerboundlist = torch.load(opt.save ..        '/lowerbound.t7')
-    lowerbound_test_list =  torch.load(opt.save .. '/lowerbound_test.t7')
-    state = torch.load(opt.save .. '/state.t7')
-    p = torch.load(opt.save .. '/parameters.t7')
-
-    parameters:copy(p)
-
-    epoch = lowerboundlist:size(1)
-else
+    model = torch.load(opt.network)
+    print(opt.network)
+    parameters, gradients = model:getParameters()
     epoch = 0
     state = {}
 end
