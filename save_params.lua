@@ -20,4 +20,4 @@ fname = 'logs_init_network2_150'
 model = torch.load(fname .. '/vxnet.net')
 params, grad = model:getParameters()
 
-torch.save(fname .. '/params.t7')
+torch.save(fname .. '/params.t7',params)
