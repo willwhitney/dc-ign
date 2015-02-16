@@ -15,6 +15,6 @@ require 'utils'
 require 'config'
 
 MODE_TEST = 'test'
-model = torch.load('logs_init_network2_150/vxnet.net')
+model = torch.load('log150gl001F96/vxnet.net')
 
 testf(true)

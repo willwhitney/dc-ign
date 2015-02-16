@@ -95,6 +95,7 @@ if opt.cuda then
 end
 
 parameters, gradients = model:getParameters()
+print('Num before', #parameters)
 if opt.reuse == 1 then 
     print("Loading old parameters!")
     -- model = torch.load(opt.network)
@@ -102,7 +103,7 @@ if opt.reuse == 1 then
     -- parameters, gradients = model:getParameters()
 
 end
--- print('Num of parameters:', #parameters)
+print('Num of parameters:', #parameters)
 
 epoch = 0
 state = {}
