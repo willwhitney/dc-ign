@@ -5,8 +5,8 @@ function testf(saveAll)
    -- test over given dataset
    print('<trainer> on testing Set:')
    reconstruction = 0
-
-   for t = 1,num_test_batches do
+   local lowerbound = 0
+   for t = 1, num_test_batches do
       -- create mini batch
       local raw_inputs = load_batch(t, MODE_TEST)
       local targets = raw_inputs
@@ -17,8 +17,17 @@ function testf(saveAll)
 
       -- test samples
       local preds = model:forward(inputs)
-      preds = preds:float()
 
+        local f = preds
+        local target = targets
+        local err = - criterion:forward(f, target:cuda())
+        local encoder_output = model:get(1).output
+        local KLDerr = KLD:forward(encoder_output, target)
+        lowerbound = lowerbound + err + KLDerr
+
+
+      preds = preds:float()
+      
       reconstruction = reconstruction + torch.sum(torch.pow(preds-targets,2))
       
       if saveAll then
@@ -39,4 +48,5 @@ function testf(saveAll)
    print('mean MSE error (test set)', reconstruction)
    testLogger:add{['% mean class accuracy (test set)'] = reconstruction}
    reconstruction = 0
+   return lowerbound
 end

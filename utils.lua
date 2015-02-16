@@ -5,7 +5,7 @@ end
 
 function getLowerbound(data)
     local lowerbound = 0
-    N_data = data:size(1) - (data:size(1) % batchSize)
+    N_data = num_test_batches
     for i = 1, N_data, batchSize do
         local batch = data[{{i,i+batchSize-1},{}}]
         local f = model:forward(batch)

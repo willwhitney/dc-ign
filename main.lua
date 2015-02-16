@@ -96,18 +96,36 @@ end
 
 parameters, gradients = model:getParameters()
 print('Num before', #parameters)
-if opt.reuse == 1 then 
-    print("Loading old parameters!")
-    -- model = torch.load(opt.network)
-    parameters = torch.load(opt.network)
-    -- parameters, gradients = model:getParameters()
 
+-- if opt.reuse == 1 then 
+--     print("Loading old parameters!")
+--     -- model = torch.load(opt.network)
+--     parameters = torch.load(opt.network)
+--     -- parameters, gradients = model:getParameters()
+-- else
+--   epoch = 0
+--   state = {}
+-- end
+
+
+if opt.reuse == 1 then
+  print("Loading old weights!")
+  lowerboundlist = torch.load(opt.save .. '/lowerbound.t7')
+  lowerbound_test_list = torch.load(opt.save .. '/lowerbound_test.t7')
+  state = torch.load(opt.save .. '/state.t7')
+  p = torch.load(opt.save .. '/parameters.t7')
+  parameters:copy(p)
+  epoch = lowerboundlist:size(1)
+  config = torch.load(opt.save .. '/config.t7')
+else
+  epoch = 0
+  state = {}
 end
+
+
 print('Num of parameters:', #parameters)
 
-epoch = 0
-state = {}
-    
+
 
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0
@@ -117,7 +135,7 @@ while true do
     local lowerbound = 0
     local time = sys.clock()
 
-    for i = 1,num_train_batches do
+    for i = 1, num_train_batches do
         xlua.progress(i, num_train_batches)
 
         --Prepare Batch
@@ -193,25 +211,26 @@ while true do
      torch.save(filename, model)
    end
 
-    testf(false)
-    --Compute the lowerbound of the test set and save it
-    -- if epoch % 2 == 0 then
-    --     lowerbound_test = getLowerbound(testData.data)
+    lowerbound_test = testf(false)
+    -- Compute the lowerbound of the test set and save it
+    if true then--epoch % 2 == 0 then
+        -- lowerbound_test = getLowerbound(testData.data)
 
-    --      if lowerbound_test_list then
-    --         lowerbound_test_list = torch.cat(lowerbound_test_list,torch.Tensor(1,1):fill(lowerbound_test/num_test_batches),1)
-    --     else
-    --         lowerbound_test_list = torch.Tensor(1,1):fill(lowerbound_test/num_test_batches)
-    --     end
+         if lowerbound_test_list then
+            lowerbound_test_list = torch.cat(lowerbound_test_list,torch.Tensor(1,1):fill(lowerbound_test/num_test_batches),1)
+        else
+            lowerbound_test_list = torch.Tensor(1,1):fill(lowerbound_test/num_test_batches)
+        end
 
-    --     print('testlowerbound = ' .. lowerbound_test/num_test_batches)
+        print('testlowerbound = ' .. lowerbound_test/num_test_batches)
 
-    --     --Save everything to be able to restart later
-    --     torch.save(opt.save .. '/parameters.t7', parameters)
-    --     torch.save(opt.save .. '/state.t7', state)
-    --     torch.save(opt.save .. '/lowerbound.t7', torch.Tensor(lowerboundlist))
-    --     torch.save(opt.save .. '/lowerbound_test.t7', torch.Tensor(lowerbound_test_list))
-    -- end
+        --Save everything to be able to restart later
+        torch.save(opt.save .. '/parameters.t7', parameters)
+        torch.save(opt.save .. '/state.t7', state)
+        torch.save(opt.save .. '/lowerbound.t7', torch.Tensor(lowerboundlist))
+        torch.save(opt.save .. '/lowerbound_test.t7', torch.Tensor(lowerbound_test_list))
+        torch.save(opt.save .. '/config.t7', config)
+    end
 
    -- plot errors
    if opt.plot then
