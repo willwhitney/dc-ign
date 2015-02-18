@@ -1,3 +1,4 @@
+thirdparty*
 *.out
 *.err
 *.mat
