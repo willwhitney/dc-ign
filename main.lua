@@ -64,11 +64,11 @@ end
 print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
 
 -- model = init_network2_color_width150()
--- model = init_network2_150()
+-- model = init_network2_full_150()
 model = init_network2_150()
 
 function test_fw_back(model)
-  print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
+  -- print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
   res=model:forward(load_batch(1,MODE_TRAINING):cuda())
   print(res:size())
   -- rev=model:backward(load_batch(1,MODE_TRAINING):cuda(), load_batch(1,MODE_TRAINING):cuda())
@@ -76,7 +76,6 @@ function test_fw_back(model)
 end
 
 -- test_fw_back(model)
-
 
 
 -- criterion = nn.MSECriterion() -- does not work well at all

@@ -12,15 +12,15 @@ require("UnPooling.lua")
 require 'image'
 
 
-bsize = 50
+bsize = 25 --50
 imwidth = 150
 
 
 COLOR = false
 
 TOTALFACES = 5230
-num_train_batches = 5000
-num_test_batches =  TOTALFACES-num_train_batches
+num_train_batches = 200--5000
+num_test_batches =  0--TOTALFACES-num_train_batches
 
 function cache(id, mode)
     collectgarbage()
@@ -55,12 +55,12 @@ function cache(id, mode)
 end
 
 for t = 1, num_train_batches do
-	cache(t, 'training')
+	cache(t, 'FT_training')
 	print(t)
 end
 
 for t = 1, num_test_batches do
-	cache(t, 'test')
+	cache(t, 'FT_test')
 	print(t)
 end
 

@@ -15,6 +15,16 @@ require 'utils'
 require 'config'
 
 MODE_TEST = 'test'
-model = torch.load('log150gl001F96/vxnet.net')
+model = torch.load('log_NEW_init_network2_150_F40_H60/vxnet.net')
+
+criterion = nn.BCECriterion()
+criterion.sizeAverage = false
+
+KLD = nn.KLDCriterion()
+KLD.sizeAverage = false
+
+criterion:cuda()
+KLD:cuda()
+
 
 testf(true)

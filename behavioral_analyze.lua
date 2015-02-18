@@ -18,19 +18,21 @@ require 'image'
 
 MODE_TEST = 'test'
 
-model = torch.load('logs_init_network2_150/vxnet.net')
+model = torch.load('log_FINE_TUNE2/classifier.net')
 
-ENC_OUT = 200
+print(model)
+ENC_OUT = 50--200
 COLOR = false
 imwidth = 150
+
+mean_arr = torch.zeros(96*2,ENC_OUT)
+sigma_arr = torch.zeros(96*2,ENC_OUT)
+ftr_arr = torch.zeros(96*2,ENC_OUT)
+
 if COLOR then
   batch = torch.zeros(1,3,imwidth,imwidth)  
-  mean_arr = torch.zeros(96*2,ENC_OUT)
-  sigma_arr = torch.zeros(96*2,ENC_OUT)
 else
   batch = torch.zeros(1,1,imwidth,imwidth)  
-  mean_arr = torch.zeros(96*2,ENC_OUT)
-  sigma_arr = torch.zeros(96*2,ENC_OUT)
 end
 
 ii = 1
@@ -57,10 +59,11 @@ for id=1,96 do
 
     res = model:forward(batch:cuda())
     
-    mean = model.modules[1].modules[11].modules[1].output:double()
-    sigma = model.modules[1].modules[11].modules[2].output:double()
-    mean_arr[ii] = mean[1]
-    sigma_arr[ii] = sigma[1]
+    -- mean = model.modules[1].modules[11].modules[1].output:double()
+    -- sigma = model.modules[1].modules[11].modules[2].output:double()
+    -- mean_arr[ii] = mean[1]
+    -- sigma_arr[ii] = sigma[1]
+    ftr_arr[ii] = model.modules[11].modules[2].output:double()
     print(ii)
     ii = ii + 1
 	end
@@ -68,11 +71,12 @@ end
 
 
 require 'mattorch'
-mattorch.save('analyzeBehavioral/mean.mat', mean_arr)
-mattorch.save('analyzeBehavioral/sigma.mat', sigma_arr)
+-- mattorch.save('analyzeBehavioral/mean.mat', mean_arr)
+-- mattorch.save('analyzeBehavioral/sigma.mat', sigma_arr)
+mattorch.save('analyzeBehavioral/ftrs.mat', ftr_arr)
 
 
-
+--]]
 
 
 
