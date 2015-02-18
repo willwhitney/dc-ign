@@ -109,10 +109,12 @@ print('Num before', #parameters)
 
 if opt.reuse == 1 then
   print("Loading old weights!")
+  print(opt.save)
   lowerboundlist = torch.load(opt.save .. '/lowerbound.t7')
   lowerbound_test_list = torch.load(opt.save .. '/lowerbound_test.t7')
   state = torch.load(opt.save .. '/state.t7')
   p = torch.load(opt.save .. '/parameters.t7')
+  print('Loaded p size:', #p)
   parameters:copy(p)
   epoch = lowerboundlist:size(1)
   config = torch.load(opt.save .. '/config.t7')

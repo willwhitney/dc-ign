@@ -1,6 +1,9 @@
 *.out
 *.err
 *.mat
+F32*
+F64*
+F96*
 tmp
 RESULTS
 log*

@@ -7,6 +7,7 @@ function testf(saveAll)
    reconstruction = 0
    local lowerbound = 0
    for t = 1, num_test_batches do
+      collectgarbage()
       -- create mini batch
       local raw_inputs = load_batch(t, MODE_TEST)
       local targets = raw_inputs
