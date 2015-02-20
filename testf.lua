@@ -1,5 +1,8 @@
 -- test function
 function testf(saveAll)
+  -- in case it didn't already exist
+  os.execute('mkdir ' .. 'tmp')
+
    -- local vars
    local time = sys.clock()
    -- test over given dataset
@@ -19,25 +22,25 @@ function testf(saveAll)
       -- test samples
       local preds = model:forward(inputs)
 
-        local f = preds
-        local target = targets
-        local err = - criterion:forward(f, target:cuda())
-        local encoder_output = model:get(1).output
-        local KLDerr = KLD:forward(encoder_output, target)
-        lowerbound = lowerbound + err + KLDerr
+      local f = preds
+      local target = targets
+      local err = - criterion:forward(f, target:cuda())
+      local encoder_output = model:get(1).output
+      local KLDerr = KLD:forward(encoder_output, target)
+      lowerbound = lowerbound + err + KLDerr
 
 
       preds = preds:float()
-      
+
       reconstruction = reconstruction + torch.sum(torch.pow(preds-targets,2))
-      
+
       if saveAll then
         torch.save('tmp/preds' .. t, preds)
       else
         if t == 1 then
             torch.save('tmp/preds' .. t, preds)
         end
-      end 
+      end
    end
    -- timing
    time = sys.clock() - time

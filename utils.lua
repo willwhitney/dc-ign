@@ -1,6 +1,7 @@
 
 function load_batch(id, mode)
-  return torch.load('DATASET/th_' .. mode .. '/batch' .. id)
+  -- return torch.load('DATASET/th_' .. mode .. '/batch' .. id)
+  return torch.load('/om/user/tejask/facegen/DATASET/th_' .. mode .. '/batch' .. id)
 end
 
 function getLowerbound(data)
