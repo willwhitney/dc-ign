@@ -53,8 +53,8 @@ Gradients:
 
 
 function SelectiveOutputClamp:__init()
-    parent.__init(self)
-    self.reset()
+    -- parent.__init(self)
+    self:reset()
 end
 
 -- Set which ouput index will pass through unimpeded.
@@ -64,17 +64,25 @@ function SelectiveOutputClamp:setPassthroughIndex(index)
 end
 
 function SelectiveOutputClamp:reset()
+    print("SelectiveOutputClamp: resetting")
     self.output = nil
     self.passthrough = nil
 end
 
 function SelectiveOutputClamp:updateOutput(input)
-    if self.passthrough == nil or self.output == nil then
-        self.output = input
-    else
+    print(self.output)
+
+    -- if output hasn't been set yet, set it
+    if self.output == nil then
+        print("SelectiveOutputClamp: self.output is nil")
+        self.output = input:clone()
+    elseif self.passthrough ~= nil then -- if there's a passthrough set
+        print("SelectiveOutputClamp: passing index", self.passthrough)
         self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
     end
+    -- if no passthrough is set, clamp everything -> no change to self.output
 
+    print(self.output)
     return self.output
 end
 

@@ -41,7 +41,7 @@ Outputs:
 
 function SelectiveGradientFilter:__init()
     parent.__init(self)
-    self.reset()
+    self:reset()
 end
 
 function SelectiveGradientFilter:setPassthroughIndex(index)
