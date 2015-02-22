@@ -49,7 +49,25 @@ opt.cuda = true
 
 MODE_TEST = 'FT_test'
 MODE_TRAINING = 'FT_training'
-model = torch.load('log_NEW_init_network2_150_F40_H60/vxnet.net')
+-- model = torch.load('log_NEW_init_network2_150_F40_H60/vxnet.net')
+
+-- model = torch.load('F96_H120/vxnet.net')
+model = init_network2_150()
+parameters, gradients = model:getParameters()
+
+print("Loading old weights!")
+print(opt.save)
+lowerboundlist = torch.load(opt.save .. '/lowerbound.t7')
+lowerbound_test_list = torch.load(opt.save .. '/lowerbound_test.t7')
+state = torch.load(opt.save .. '/state.t7')
+p = torch.load(opt.save .. '/parameters.t7')
+print('Loaded p size:', #p)
+parameters:copy(p)
+epoch = lowerboundlist:size(1)
+config = torch.load(opt.save .. '/config.t7')
+
+
+
 encoder = model:get(1)
 print(encoder)
 num_faces= 150--200
@@ -102,7 +120,7 @@ end
 -- classifier:add(model:get(2))
 -- classifier:add(nn.Dropout(0.5))
 classifier_new = nn.Sequential()
-classifier_new:add(nn.Linear(2250, 50))
+classifier_new:add(nn.Linear(5400, 50))
 classifier_new:add(nn.ReLU())
 -- classifier:add(nn.Linear(2250, #classes))
 classifier_new:add(nn.Linear(50, #classes))

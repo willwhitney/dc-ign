@@ -16,12 +16,30 @@ require 'utils'
 require 'config'
 require 'image'
 
-MODE_TEST = 'test'
 
-model = torch.load('log_FINE_TUNE2/classifier.net')
+MODE_TEST = 'test'
+if false then
+  model = torch.load('F96_H120/vxnet.net')
+else
+  opt = {}
+  opt.save = 'F96_H120'
+  model = init_network2_150()
+  parameters, gradients = model:getParameters()
+
+  print("Loading old weights!")
+  print(opt.save)
+  lowerboundlist = torch.load(opt.save .. '/lowerbound.t7')
+  lowerbound_test_list = torch.load(opt.save .. '/lowerbound_test.t7')
+  state = torch.load(opt.save .. '/state.t7')
+  p = torch.load(opt.save .. '/parameters.t7')
+  print('Loaded p size:', #p)
+  parameters:copy(p)
+  epoch = lowerboundlist:size(1)
+  config = torch.load(opt.save .. '/config.t7')
+end
 
 print(model)
-ENC_OUT = 50--200
+ENC_OUT = 120--200
 COLOR = false
 imwidth = 150
 
@@ -59,11 +77,11 @@ for id=1,96 do
 
     res = model:forward(batch:cuda())
     
-    -- mean = model.modules[1].modules[11].modules[1].output:double()
-    -- sigma = model.modules[1].modules[11].modules[2].output:double()
-    -- mean_arr[ii] = mean[1]
-    -- sigma_arr[ii] = sigma[1]
-    ftr_arr[ii] = model.modules[11].modules[2].output:double()
+    mean = model.modules[1].modules[11].modules[1].output:double()
+    sigma = model.modules[1].modules[11].modules[2].output:double()
+    mean_arr[ii] = mean[1]
+    sigma_arr[ii] = sigma[1]
+    -- ftr_arr[ii] = model.modules[11].modules[2].output:double()
     print(ii)
     ii = ii + 1
 	end
@@ -71,9 +89,9 @@ end
 
 
 require 'mattorch'
--- mattorch.save('analyzeBehavioral/mean.mat', mean_arr)
--- mattorch.save('analyzeBehavioral/sigma.mat', sigma_arr)
-mattorch.save('analyzeBehavioral/ftrs.mat', ftr_arr)
+mattorch.save('analyzeBehavioral/mean.mat', mean_arr)
+mattorch.save('analyzeBehavioral/sigma.mat', sigma_arr)
+-- mattorch.save('analyzeBehavioral/ftrs.mat', ftr_arr)
 
 
 --]]
