@@ -4,22 +4,18 @@ local SelectiveOutputClamp, parent = torch.class('nn.SelectiveOutputClamp', 'nn.
 
 --[[
 
-The API here is a little tricky, so be careful.
+This layer takes a batch and sets all samples in the batch equal to the first one.
+A single index of each sample, `self.passthrough`, can be sent on unchanged (not clamped).
 
-When it's created, the SelectiveOutputClamp has nil output and nil passthrough.
+That is,
 
-Call `setPassthroughIndex` with the index of the data you want it to pass
-through unchanged.
-
-The first time it runs updateOutput, it will save the input it receives as its output.
-These are its clamped values.
-
-From then until it is reset, its output for all indices other than `self.passthrough`
-will be fixed as those clamped values.
+self.output[i] = input[1] -- all outputs in batch same as first input
+self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
+                    -- one value of each sample in input sent through unchanged
 
 Gradients are passed through unchanged.
 
-First run:
+First sample in a batch (unchanged):
 -> | ->
 -> | ->
 -> | ->
@@ -29,17 +25,18 @@ First run:
 -> | ->
 -> | ->
 
-Additional runs:
+Other samples of the batch:
+(all clamped to input[1] except for the passthrough)
 ~> | ->
 ~> | ->
 ~> | ->
 ~> | ->
 ~> | ->
-~>   ~>
+~>   ~>     -- this is the passthrough (unchanged)
 ~> | ->
 ~> | ->
 
-Gradients:
+Gradients (unchanged):
 <- | <-
 <- | <-
 <- | <-
@@ -63,26 +60,29 @@ function SelectiveOutputClamp:setPassthroughIndex(index)
     self.passthrough = index
 end
 
-function SelectiveOutputClamp:reset()
-    print("SelectiveOutputClamp: resetting")
-    self.output = nil
-    self.passthrough = nil
-end
+-- function SelectiveOutputClamp:reset()
+--     self.output = nil
+--     self.passthrough = nil
+-- end
 
 function SelectiveOutputClamp:updateOutput(input)
-    print(self.output)
-
     -- if output hasn't been set yet, set it
-    if self.output == nil then
-        print("SelectiveOutputClamp: self.output is nil")
-        self.output = input:clone()
-    elseif self.passthrough ~= nil then -- if there's a passthrough set
-        print("SelectiveOutputClamp: passing index", self.passthrough)
-        self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
-    end
+    -- if self.output == nil then
+    --     self.output = input:clone()
+    -- elseif self.passthrough ~= nil then -- if there's a passthrough set
+    --     self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
+    -- end
     -- if no passthrough is set, clamp everything -> no change to self.output
 
-    print(self.output)
+    self.output = input:clone()
+    for i = 1, input:size()[1] do
+        self.output[i] = input[1]:clone()
+    end
+
+    if self.passthrough ~= nil then
+       self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
+    end
+
     return self.output
 end
 
@@ -90,3 +90,20 @@ function SelectiveOutputClamp:updateGradInput(input, gradOutput)
     self.gradInput = gradOutput
     return self.gradInput
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
