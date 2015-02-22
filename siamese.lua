@@ -49,7 +49,29 @@ opt.cuda = true
 
 MODE_TEST = 'FT_test'
 MODE_TRAINING = 'FT_training'
-model = torch.load('log150gl001F96_OPENMIND/vxnet.net')
+
+if false then
+  model = torch.load('F96_H120/vxnet.net')
+else
+  opt.save = 'F96_H120'
+  model = init_network2_150()
+  parameters, gradients = model:getParameters()
+
+  print("Loading old weights!")
+  print(opt.save)
+  lowerboundlist = torch.load(opt.save .. '/lowerbound.t7')
+  lowerbound_test_list = torch.load(opt.save .. '/lowerbound_test.t7')
+  state = torch.load(opt.save .. '/state.t7')
+  p = torch.load(opt.save .. '/parameters.t7')
+  print('Loaded p size:', #p)
+  parameters:copy(p)
+  epoch = lowerboundlist:size(1)
+  config = torch.load(opt.save .. '/config.t7')
+end
+print(model)
+
+local batch = load_batch(1, MODE_TRAINING)
+model:forward(batch:cuda())
 ENC_DIM = model:get(1).modules[10].output:size()[2]
 print(ENC_DIM)
 print(model)
@@ -66,6 +88,7 @@ if false then
       model:forward(batch:cuda())
       ALLDATA[i] = {}
       ftrs = model:get(1).modules[10].output:double() 
+
       for j=1,batch:size()[1] do
          ALLDATA[i][j] =  ftrs[j]
       end
@@ -220,6 +243,7 @@ function trainf()
 	  local targets = torch.zeros(batchSize,1)
 	  for bid=1,batchSize do
 	  	jj = indxs[(t-1)*batchSize +bid]
+
 	  	inputs[bid] = training['X'][jj]
 	  	targets[bid] = training['Y'][jj]
 	  end      
