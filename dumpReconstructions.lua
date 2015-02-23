@@ -16,7 +16,7 @@ require 'config'
 
 MODE_TEST = 'test'
 opt = {}
-opt.save = 'F96_H120_lr0_0005_BACK1'
+opt.save = 'F96_H120_lr0_0005_BACK_3'
 -- model = torch.load('F96_H120/vxnet.net')
 model = init_network2_150()
 parameters, gradients = model:getParameters()

@@ -16,7 +16,7 @@ require 'config'
 require 'image'
 
 opt = {}
-opt.save = 'F96_H120_lr0_0005'
+opt.save = 'F96_H120_lr0_0005_BACK_3'
 -- model = torch.load('F96_H120/vxnet.net')
 model = init_network2_150()
 parameters, gradients = model:getParameters()
@@ -53,7 +53,8 @@ function getfeatures(fname)
 	batch = torch.zeros(1,1,imwidth,imwidth)  
 	batch[1]=newim
 	model:forward(batch:cuda())
-	ftrs = model:get(2).output:double()
+	-- ftrs = model:get(2).output:double()
+	ftrs = model.modules[1].modules[11].modules[1].output:double()
 	-- print(ftrs:size())
 	return ftrs
 end

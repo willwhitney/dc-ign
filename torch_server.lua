@@ -3,8 +3,13 @@ local json = require ("dkjson")
 local zmq = require "lzmq"
 local context = zmq.init(1)
 
+cmd = torch.CmdLine()
+cmd:option('-port', 5000, 'port number')
+params = cmd:parse()
+PORT = params.port
+
 local socket = context:socket(zmq.REP)
-socket:bind("tcp://*:7000")
+socket:bind("tcp://*:" .. PORT)
 
 function serialize(data)
 	if torch.type(1) == torch.type(data) then
@@ -44,7 +49,7 @@ while true do
 			ret = _G[func_name](args)[1]
 			-- ret = torch.rand(10):float()
 		    ret = serialize(ret)
-		    print(ret)
+		    -- print(ret)
 		    ret = json.encode (ret,{ indent = true })
 		    socket:send(ret)
 		end
