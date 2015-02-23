@@ -53,7 +53,7 @@ MODE_TRAINING = 'FT_training'
 if false then
   model = torch.load('F96_H120/vxnet.net')
 else
-  opt.save = 'F96_H120'
+  opt.save = 'F96_H120_lr0_0005'
   model = init_network2_150()
   parameters, gradients = model:getParameters()
 
@@ -171,11 +171,11 @@ classes = {1,2}
 
 classifier = nn.Sequential()
 -- classifier:add(nn.Dropout(0.5))
-classifier:add(nn.Linear(ENC_DIM*2, 1000))
-classifier:add(nn.ReLU())
+classifier:add(nn.Linear(ENC_DIM*2, #classes))
+-- classifier:add(nn.ReLU())
 
-classifier:add(nn.Linear(1000, 1000))
-classifier:add(nn.ReLU())
+-- classifier:add(nn.Linear(1000, 1000))
+-- classifier:add(nn.ReLU())
 
 -- -- classifier:add(nn.Dropout(0.5))
 -- classifier:add(nn.Linear(2000, 500))
@@ -185,7 +185,7 @@ classifier:add(nn.ReLU())
 -- classifier:add(nn.Linear(500, 50))
 -- classifier:add(nn.ReLU())
 
-classifier:add(nn.Linear(1000, #classes))
+-- classifier:add(nn.Linear(100, #classes))
 classifier:add(nn.LogSoftMax())
 classifier:cuda()
 
