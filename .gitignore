@@ -9,5 +9,7 @@ tmp
 RESULTS
 log*
 DATASET
+CNN_DATASET
 
-.ipynb*
+.ipynb_checkpoints/
+*.ipynb
