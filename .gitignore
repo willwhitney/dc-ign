@@ -9,3 +9,5 @@ tmp
 RESULTS
 log*
 DATASET
+
+.ipynb*
