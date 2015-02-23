@@ -5,7 +5,7 @@ local context = zmq.init(1)
 
 cmd = torch.CmdLine()
 cmd:option('-port', 5000, 'port number')
-params = cmd:parse()
+params = cmd:parse(arg)
 PORT = params.port
 
 local socket = context:socket(zmq.REP)
