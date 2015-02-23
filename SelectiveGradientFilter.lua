@@ -51,6 +51,7 @@ end
 
 function SelectiveGradientFilter:reset()
     self.passthrough = nil
+    self.active = true
 end
 
 function SelectiveGradientFilter:updateOutput(input)
@@ -59,15 +60,19 @@ function SelectiveGradientFilter:updateOutput(input)
 end
 
 function SelectiveGradientFilter:updateGradInput(input, gradOutput)
-    if self.passthrough == nil then
-        self.gradInput:resizeAs(gradOutput)
-        self.gradInput:fill(0)
-        self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
+    if self.active then
+        if self.passthrough == nil then
+            self.gradInput:resizeAs(gradOutput)
+            self.gradInput:fill(0)
+            self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
+        else
+            self.gradInput:resizeAs(gradOutput)
+            self.gradInput:fill(0)
+            self.gradInput[{{}, self.passthrough}] = gradOutput[{{}, self.passthrough}]
+            self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
+        end
     else
-        self.gradInput:resizeAs(gradOutput)
-        self.gradInput:fill(0)
-        self.gradInput[{{}, self.passthrough}] = gradOutput[{{}, self.passthrough}]
-        self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
+        self.gradInput:resizeAs(gradOutput):copy(gradOutput)
     end
 
     return self.gradInput

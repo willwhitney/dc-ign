@@ -21,8 +21,8 @@ require 'SelectiveGradientFilter'
 opt = {
   cuda = true,
   threads = 4,
-  save = "MV_F96_H40",
-  import = "F96_H40",
+  save = "MV_F96_H120_lr0_0005_BACKUP1_clamped_sigma",
+  import = "F96_H120_lr0_0005_BACKUP1/F96_H120_lr0_0005",
   -- dataset_name = "AZ_VARIED",
   -- free_param_index = 1,
   num_train_batches = 1050, -- 1050
@@ -37,7 +37,8 @@ MODE_TRAINING = "FT_training"
 MODE_TEST = "FT_test"
 
 
-model = init_network2_150()
+-- model = init_network2_150()
+model = init_network2_150_mv()
 
 
 criterion = nn.BCECriterion()
@@ -66,26 +67,26 @@ epoch = lowerboundlist:size(1)
 config = torch.load(opt.import .. '/config.t7')
 
 -- only add in the clamps if they're not already there
-if #model:findModules('nn.SelectiveGradientFilter') == 0 then
-  -- now clamp the gradients and outputs
-  -- this puts in, after the Reparametrize, a SelectiveGradientFilter
-  -- and a SelectiveOutputClamp.
-  -- Doing this after the Reparam means we only need one layer of these
-  -- is the result still correct?
-  clamp = nn.SelectiveOutputClamp()
-  gradFilter = nn.SelectiveGradientFilter()
+-- if #model:findModules('nn.SelectiveGradientFilter') == 0 then
+--   -- now clamp the gradients and outputs
+--   -- this puts in, after the Reparametrize, a SelectiveGradientFilter
+--   -- and a SelectiveOutputClamp.
+--   -- Doing this after the Reparam means we only need one layer of these
+--   -- is the result still correct?
+--   clamp = nn.SelectiveOutputClamp()
+--   gradFilter = nn.SelectiveGradientFilter()
 
-  if opt.cuda then
-    clamp:cuda()
-    gradFilter:cuda()
-  end
+--   if opt.cuda then
+--     clamp:cuda()
+--     gradFilter:cuda()
+--   end
 
-  model:insert(clamp, 3)
-  model:insert(gradFilter, 3)
-else
-  clamp = model:findModules('nn.SelectiveOutputClamp')[1]
-  gradFilter = model:findModules('nn.SelectiveGradientFilter')[1]
-end
+--   model:insert(clamp, 3)
+--   model:insert(gradFilter, 3)
+-- else
+clamps = model:findModules('nn.SelectiveOutputClamp')
+gradFilters = model:findModules('nn.SelectiveGradientFilter')
+-- end
 
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0
@@ -115,8 +116,13 @@ while true do
         -- set the clamp and gradient passthroughs
         -- currently just giving them one free param for
         --    each of these pose variables
-        clamp:setPassthroughIndex(dataset_type)
-        gradFilter:setPassthroughIndex(dataset_type)
+        for clampIndex = 1, #clamps do
+          clamps[clampIndex]:setPassthroughIndex(dataset_type)
+          gradFilters[clampIndex]:setPassthroughIndex(dataset_type)
+
+          clamps[clampIndex].active = true
+          gradFilters[clampIndex].active = true
+        end
 
          if opt.cuda then
             batch = batch:cuda()
