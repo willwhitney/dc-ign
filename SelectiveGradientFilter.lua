@@ -42,6 +42,7 @@ Outputs:
 function SelectiveGradientFilter:__init()
     parent.__init(self)
     self:reset()
+    self.gradInput = torch.Tensor()
 end
 
 function SelectiveGradientFilter:setPassthroughIndex(index)
@@ -59,10 +60,14 @@ end
 
 function SelectiveGradientFilter:updateGradInput(input, gradOutput)
     if self.passthrough == nil then
-        self.gradInput = torch.zeros(gradOutput:size())
+        self.gradInput:resizeAs(gradOutput)
+        self.gradInput:fill(0)
+        self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
     else
-        self.gradInput = torch.zeros(gradOutput:size())
+        self.gradInput:resizeAs(gradOutput)
+        self.gradInput:fill(0)
         self.gradInput[{{}, self.passthrough}] = gradOutput[{{}, self.passthrough}]
+        self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
     end
 
     return self.gradInput
