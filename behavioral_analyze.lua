@@ -22,7 +22,7 @@ if false then
   model = torch.load('F96_H120/vxnet.net')
 else
   opt = {}
-  opt.save = 'F96_H120'
+  opt.save = 'F96_H120_lr0_0005_BACK1'
   model = init_network2_150()
   parameters, gradients = model:getParameters()
 

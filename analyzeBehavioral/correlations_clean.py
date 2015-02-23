@@ -33,8 +33,8 @@ mean_features = np.transpose(mean_features['x'])
 sigma_features = scipy.io.loadmat('sigma.mat')
 sigma_features =  np.transpose(sigma_features['x'])
 
-ftrs = scipy.io.loadmat('ftrs.mat')
-ftrs =  np.transpose(ftrs['x'])
+# ftrs = scipy.io.loadmat('ftrs.mat')
+# ftrs =  np.transpose(ftrs['x'])
 
 counter=0
 for i in range(96):
