@@ -60,27 +60,23 @@ function SelectiveOutputClamp:setPassthroughIndex(index)
     self.passthrough = index
 end
 
--- function SelectiveOutputClamp:reset()
---     self.output = nil
---     self.passthrough = nil
--- end
+function SelectiveOutputClamp:reset()
+    self.passthrough = nil
+    self.active = true
+end
 
 function SelectiveOutputClamp:updateOutput(input)
-    -- if output hasn't been set yet, set it
-    -- if self.output == nil then
-    --     self.output = input:clone()
-    -- elseif self.passthrough ~= nil then -- if there's a passthrough set
-    --     self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
-    -- end
-    -- if no passthrough is set, clamp everything -> no change to self.output
+    if self.active then
+        self.output = input:clone()
+        for i = 1, input:size()[1] do
+            self.output[i] = input[1]:clone()
+        end
 
-    self.output = input:clone()
-    for i = 1, input:size()[1] do
-        self.output[i] = input[1]:clone()
-    end
-
-    if self.passthrough ~= nil then
-       self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
+        if self.passthrough ~= nil then
+           self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
+        end
+    else
+        self.output = input:clone()
     end
 
     return self.output

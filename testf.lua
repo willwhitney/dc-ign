@@ -60,14 +60,22 @@ function testf_MV(saveAll)
   -- in case it didn't already exist
   os.execute('mkdir -p' .. 'tmp')
 
-   -- local vars
-   local time = sys.clock()
-   -- test over given dataset
-   print('<trainer> on testing Set:')
-   reconstruction = 0
-   local lowerbound = 0
-   for _, dataset_name in pairs({"AZ_VARIED", "EL_VARIED", "LIGHT_AZ_VARIED"}) do
-    os.execute('mkdir -p ' .. 'tmp' .. '/' .. dataset_name)
+  -- local vars
+  local time = sys.clock()
+  -- test over given dataset
+  print('<trainer> on testing Set:')
+  reconstruction = 0
+  local lowerbound = 0
+
+  -- turn the clamps off so we get full batch outputs
+  for clampIndex = 1, #clamps do
+    clamps[clampIndex].active = false
+    gradFilters[clampIndex].active = false
+  end
+
+  for _, dataset_name in pairs({"AZ_VARIED", "EL_VARIED", "LIGHT_AZ_VARIED"}) do
+    local save_dir = 'tmp' .. '/' .. opt.save .. '/' .. dataset_name
+    os.execute('mkdir -p ' .. save_dir)
 
      for t = 1, opt.num_test_batches_per_type do
         collectgarbage()
@@ -95,10 +103,10 @@ function testf_MV(saveAll)
         reconstruction = reconstruction + torch.sum(torch.pow(preds-targets,2))
 
         if saveAll then
-          torch.save('tmp/'..dataset_name..'/preds' .. t, preds)
+          torch.save(save_dir..'/preds' .. t, preds)
         else
           if t == 1 then
-              torch.save('tmp/'..dataset_name..'/preds' .. t, preds)
+              torch.save(save_dir..'/preds' .. t, preds)
           end
         end
      end
