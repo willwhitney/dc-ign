@@ -27,11 +27,11 @@ function cache(id, mode)
     if COLOR==true then
       batch = torch.zeros(bsize,3,imwidth,imwidth)
     else
-      batch = torch.zeros(bsize,1,imwidth,imwidth)  
+      batch = torch.zeros(bsize,1,imwidth,imwidth)
     end
     for i=1,bsize do
       local im_tmp = image.load('DATASET/' .. mode .. '/face_' .. id .. '/' .. i .. '.png')
-      
+
       if COLOR==true then
         im = torch.zeros(3,150, 150)
         if im:size()[2] ~= imwidth then
@@ -51,7 +51,7 @@ function cache(id, mode)
       torch.save('DATASET/th_color_' .. mode .. '/batch' .. id, batch:float())
     else
       torch.save('DATASET/th_' .. mode .. '/batch' .. id, batch:float())
-    end  
+    end
 end
 
 for t = 1, num_train_batches do

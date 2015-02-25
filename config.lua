@@ -9,7 +9,7 @@ num_train_batches = 5000
 num_test_batches =  TOTALFACES-num_train_batches
 
 config = {
-    learningRate = -0.001,
+    learningRate = -0.0015,
     momentumDecay = 0.1,
     updateDecay = 0.01
 }
@@ -188,7 +188,7 @@ end
 function init_network2_150()
  -- Model Specific parameters
   filter_size = 5
-  dim_hidden = 40--200
+  dim_hidden = 120--200
   feature_maps = 96
   colorchannels = 1
 

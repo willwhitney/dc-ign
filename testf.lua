@@ -73,8 +73,9 @@ function testf_MV(saveAll)
     gradFilters[clampIndex].active = false
   end
 
-  for _, dataset_name in pairs({"AZ_VARIED", "EL_VARIED", "LIGHT_AZ_VARIED"}) do
-    local save_dir = 'tmp' .. '/' .. opt.save .. '/' .. dataset_name
+  for _, dataset_name in pairs({"AZ_VARIED", "EL_VARIED", "LIGHT_AZ_VARIED", "SHAPE_VARIED"}) do
+    local save_dir = 'tmp' .. '/' .. opt.save .. '/' .. dataset_name .. '/epoch_' .. epoch
+
     os.execute('mkdir -p ' .. save_dir)
 
      for t = 1, opt.num_test_batches_per_type do
@@ -105,7 +106,7 @@ function testf_MV(saveAll)
         if saveAll then
           torch.save(save_dir..'/preds' .. t, preds)
         else
-          if t == 1 then
+          if t < 10 then
               torch.save(save_dir..'/preds' .. t, preds)
           end
         end
@@ -118,7 +119,7 @@ function testf_MV(saveAll)
    print("<trainer> time to test 1 sample = " .. (time*1000) .. 'ms')
 
    -- print confusion matrix
-   reconstruction = reconstruction / (bsize * opt.num_test_batches * 3 * 150 * 150)
+   reconstruction = reconstruction / (opt.bsize * opt.num_test_batches * 3 * 150 * 150)
    print('mean MSE error (test set)', reconstruction)
    testLogger:add{['% mean class accuracy (test set)'] = reconstruction}
    reconstruction = 0

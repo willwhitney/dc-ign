@@ -20,15 +20,22 @@ require 'SelectiveGradientFilter'
 
 opt = {
   cuda = true,
-  threads = 4,
-  save = "MV_F96_H120_lr0_0005_BACKUP1_clamped_sigma",
-  import = "F96_H120_lr0_0005_BACKUP1/F96_H120_lr0_0005",
+  threads = 2,
+  save = "MV_lr_0_0015_F96_H120_lr0_0005",
+  import = "F96_H120_lr0_0005",
   -- dataset_name = "AZ_VARIED",
   -- free_param_index = 1,
-  num_train_batches = 1050, -- 1050
-  num_test_batches = 90, --90
-  num_test_batches_per_type = 30 --30
+  num_train_batches = 5000, -- 1050
+  num_train_batches_per_type = 3000, --30
+  num_test_batches = 1400, --90
+  num_test_batches_per_type = 350, --30
+  bsize = 20,
+
+  shape_bias = false,
+  shape_bias_amount = 120,
+  load = true
 }
+
 torch.setnumthreads(opt.threads)
 
 os.execute('mkdir ' .. opt.save)
@@ -39,7 +46,6 @@ MODE_TEST = "FT_test"
 
 -- model = init_network2_150()
 model = init_network2_150_mv()
-
 
 criterion = nn.BCECriterion()
 criterion.sizeAverage = false
@@ -56,15 +62,19 @@ end
 parameters, gradients = model:getParameters()
 print('Num before', #parameters)
 
--- load all the values from the network stored in opt.import
-lowerboundlist = torch.load(opt.import .. '/lowerbound.t7')
-lowerbound_test_list = torch.load(opt.import .. '/lowerbound_test.t7')
-state = torch.load(opt.import .. '/state.t7')
-p = torch.load(opt.import .. '/parameters.t7')
-print('Loaded p size:', #p)
-parameters:copy(p)
-epoch = lowerboundlist:size(1)
-config = torch.load(opt.import .. '/config.t7')
+if opt.load then
+  -- load all the values from the network stored in opt.import
+  lowerboundlist = torch.load(opt.import .. '/lowerbound.t7')
+  lowerbound_test_list = torch.load(opt.import .. '/lowerbound_test.t7')
+  state = torch.load(opt.import .. '/state.t7')
+  p = torch.load(opt.import .. '/parameters.t7')
+  print('Loaded p size:', #p)
+  parameters:copy(p)
+  epoch = lowerboundlist:size(1)
+  config = torch.load(opt.import .. '/config.t7')
+else
+  epoch = 1
+end
 
 -- only add in the clamps if they're not already there
 -- if #model:findModules('nn.SelectiveGradientFilter') == 0 then
@@ -106,7 +116,12 @@ while true do
         -- load_random_mv_batch returns two things:
         -- 1. the batch itself
         -- 2. the type of batch it has selected (AZ, EL, LIGHT_AZ)
-        local batch, dataset_type = load_random_mv_batch(MODE_TRAINING)
+
+        if opt.shape_bias then
+          batch, dataset_type = load_random_mv_shape_bias_batch(MODE_TRAINING)
+        else
+          batch, dataset_type = load_random_mv_batch(MODE_TRAINING)
+        end
 
         -- clear the clamp and gradFilter's existing state
         -- (otherwise the clamp will still be stuck on the last output)
@@ -114,11 +129,33 @@ while true do
         -- gradFilter:reset()
 
         -- set the clamp and gradient passthroughs
-        -- currently just giving them one free param for
-        --    each of these pose variables
         for clampIndex = 1, #clamps do
-          clamps[clampIndex]:setPassthroughIndex(dataset_type)
-          gradFilters[clampIndex]:setPassthroughIndex(dataset_type)
+          -- if dataset_type == 1 then
+          --   clamps[clampIndex]:setPassthroughIndices({1,2})
+          --   gradFilters[clampIndex]:setPassthroughIndices({1,2})
+          -- elseif dataset_type == 2 then
+          --   clamps[clampIndex]:setPassthroughIndices({3,4})
+          --   gradFilters[clampIndex]:setPassthroughIndices({3,4})
+          -- elseif dataset_type == 3 then
+          --   clamps[clampIndex]:setPassthroughIndices({5,6})
+          --   gradFilters[clampIndex]:setPassthroughIndices({5,6})
+          -- elseif dataset_type == 4 then
+          --   clamps[clampIndex]:setPassthroughIndices({7,120})
+          --   gradFilters[clampIndex]:setPassthroughIndices({7,120})
+          -- end
+          if dataset_type == 1 then
+            clamps[clampIndex]:setPassthroughIndices(1)
+            gradFilters[clampIndex]:setPassthroughIndices(1)
+          elseif dataset_type == 2 then
+            clamps[clampIndex]:setPassthroughIndices(2)
+            gradFilters[clampIndex]:setPassthroughIndices(2)
+          elseif dataset_type == 3 then
+            clamps[clampIndex]:setPassthroughIndices(3)
+            gradFilters[clampIndex]:setPassthroughIndices(3)
+          elseif dataset_type == 4 then
+            clamps[clampIndex]:setPassthroughIndices({4,120})
+            gradFilters[clampIndex]:setPassthroughIndices({4,120})
+          end
 
           clamps[clampIndex].active = true
           gradFilters[clampIndex].active = true

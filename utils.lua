@@ -5,11 +5,11 @@ function load_batch(id, mode)
 end
 
 function load_mv_batch(id, dataset_name, mode)
-    return torch.load('DATASET/TRANSFORMATION_DATASET/th_' .. dataset_name .. '/' .. mode .. '/batch' .. id)
+    return torch.load('CNN_DATASET/th_' .. dataset_name .. '/' .. mode .. '/batch' .. id)
 end
 
 function load_random_mv_batch(mode)
-    local variation_type = math.random(3)
+    local variation_type = math.random(4)
     local variation_name = ""
     if variation_type == 1 then
         variation_name = "AZ_VARIED"
@@ -17,13 +17,40 @@ function load_random_mv_batch(mode)
         variation_name = "EL_VARIED"
     elseif variation_type == 3 then
         variation_name = "LIGHT_AZ_VARIED"
+    elseif variation_type == 4 then
+        variation_name = "SHAPE_VARIED"
     end
 
     id = 1
     if mode == MODE_TRAINING then
-        id = math.random(350)
+        id = math.random(opt.num_train_batches_per_type)
     elseif mode == MODE_TEST then
-        id = math.random(30)
+        id = math.random(opt.num_test_batches_per_type)
+    end
+    return load_mv_batch(id, variation_name, mode), variation_type
+end
+
+-- has a bias towards shape samples
+-- for training from scratch
+function load_random_mv_shape_bias_batch(mode)
+    local variation_type = math.random(opt.shape_bias_amount)
+    local variation_name = ""
+    if variation_type == 1 then
+        variation_name = "AZ_VARIED"
+    elseif variation_type == 2 then
+        variation_name = "EL_VARIED"
+    elseif variation_type == 3 then
+        variation_name = "LIGHT_AZ_VARIED"
+    else
+        variation_name = "SHAPE_VARIED"
+        variation_type = 4
+    end
+
+    id = 1
+    if mode == MODE_TRAINING then
+        id = math.random(opt.num_train_batches_per_type)
+    elseif mode == MODE_TEST then
+        id = math.random(opt.num_test_batches_per_type)
     end
     return load_mv_batch(id, variation_name, mode), variation_type
 end

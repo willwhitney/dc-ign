@@ -56,8 +56,8 @@ end
 
 -- Set which ouput index will pass through unimpeded.
 -- Warning: treats the first index of its input as a batch index.
-function SelectiveOutputClamp:setPassthroughIndex(index)
-    self.passthrough = index
+function SelectiveOutputClamp:setPassthroughIndices(indices)
+    self.passthrough = indices
 end
 
 function SelectiveOutputClamp:reset()

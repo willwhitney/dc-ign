@@ -12,20 +12,26 @@ bsize = 20
 imwidth = 150
 
 -- TOTALFACES = 395
-num_train_batches = 350
-num_test_batches =  30 --TOTALFACES-num_train_batches
+num_train_batches = 3000
+num_test_batches =  350 --TOTALFACES-num_train_batches
 
 SET_NAME = "LIGHT_AZ_VARIED"
+DATASET_DIR = '/om/user/tejask/facemachine/CNN_DATASET/'..SET_NAME
+OUTPUT_DIR = 'CNN_DATASET'
 
-function cache(batch_index, mode)
+function cache(dirname, mode, batch_index)
   collectgarbage()
+  os.execute('mkdir -p '..OUTPUT_DIR..'/th_'..SET_NAME..'/'..mode)
 
   batch = torch.zeros(bsize,1,imwidth,imwidth)
 
   i = 1
-  for filename in lfs.dir('DATASET/TRANSFORMATION_DATASET/'..SET_NAME..'/face_' .. batch_index) do
+  for filename in lfs.dir(DATASET_DIR..'/' .. dirname) do
+    if i > bsize then
+      break
+    end
     if string.sub(filename, string.len(filename) - 3, string.len(filename)) == ".png" then
-      local im_tmp = image.load('DATASET/TRANSFORMATION_DATASET/'..SET_NAME..'/face_' .. batch_index .. '/' .. filename)
+      local im_tmp = image.load(DATASET_DIR..'/' .. dirname .. '/' .. filename)
 
       if COLOR==true then
         im = torch.zeros(3,150, 150)
@@ -44,19 +50,35 @@ function cache(batch_index, mode)
     end
   end
 
-  torch.save('DATASET/TRANSFORMATION_DATASET/th_'..SET_NAME..'/'..mode..'/batch' .. batch_index, batch:float())
+  torch.save(OUTPUT_DIR..'/th_'..SET_NAME..'/'..mode..'/batch' .. batch_index, batch:float())
 end
 
-for batch_index = 1, num_train_batches do
-  cache(batch_index, 'FT_training')
-  print(batch_index)
+local batch_index = 1
+local mode = 'FT_training'
+for dirname in lfs.dir(DATASET_DIR) do
+  if batch_index > num_train_batches then
+    mode = 'FT_test'
+    batch_index = 1
+  end
+  if lfs.attributes(DATASET_DIR .. '/' .. dirname).mode == 'directory' then
+    cache(dirname, mode, batch_index)
+    print(batch_index)
+    batch_index = batch_index + 1
+  end
 end
 
-for batch_index = 1, num_test_batches do
-  cache(batch_index, 'FT_test')
-  print(batch_index)
-end
 
+-- batch_index = 1
+-- for dirname in lfs.dir(DATASET_DIR) do
+--   if batch_index > num_test_batches then
+--     break
+--   end
+--   if lfs.attributes(DATASET_DIR .. '/' .. dirname).mode == 'directory' then
+--     cache(dirname, 'FT_test', batch_index)
+--     print(batch_index)
+--     batch_index = batch_index + 1
+--   end
+-- end
 --testing speed of loading batch
 -- require 'sys'
 -- for rep = 1,20 do
