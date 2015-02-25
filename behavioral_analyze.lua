@@ -45,7 +45,7 @@ imwidth = 150
 
 mean_arr = torch.zeros(96*2,ENC_OUT)
 sigma_arr = torch.zeros(96*2,ENC_OUT)
-ftr_arr = torch.zeros(96*2,ENC_OUT)
+-- ftr_arr = torch.zeros(96*2,5400)
 
 if COLOR then
   batch = torch.zeros(1,3,imwidth,imwidth)  
@@ -81,7 +81,7 @@ for id=1,96 do
     sigma = model.modules[1].modules[11].modules[2].output:double()
     mean_arr[ii] = mean[1]
     sigma_arr[ii] = sigma[1]
-    -- ftr_arr[ii] = model.modules[11].modules[2].output:double()
+    -- ftr_arr[ii] = model.modules[1].modules[10].output:double()
     print(ii)
     ii = ii + 1
 	end

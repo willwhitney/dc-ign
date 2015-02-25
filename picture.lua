@@ -16,8 +16,8 @@ require 'config'
 require 'image'
 
 opt = {}
-opt.save = 'F96_H120_lr0_0005_BACK_3'
--- model = torch.load('F96_H120/vxnet.net')
+-- opt.save = 'F96_H120_lr0_0005_BACKUP4'
+opt.save = 'F64_H20'
 model = init_network2_150()
 parameters, gradients = model:getParameters()
 
