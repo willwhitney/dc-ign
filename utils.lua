@@ -1,6 +1,11 @@
 
 function load_batch(id, mode)
-  return torch.load('DATASET/th_' .. mode .. '/batch' .. id)
+  res = torch.load('DATASET/th_' .. mode .. '/batch' .. id)
+  -- if ADDNOISE then
+  --   print("Adding noise\n")
+  --   res = res*0 --res[{{1,1,{1,150},{1,75}}}] = 1
+  -- end
+  return res
   -- return torch.load('/om/user/tejask/facegen/DATASET/th_' .. mode .. '/batch' .. id)
 end
 

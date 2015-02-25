@@ -191,6 +191,8 @@ function init_network2_150()
   dim_hidden = 120--200
   feature_maps = 96
   colorchannels = 1
+  dim_hidden = 120--120
+  feature_maps = 96 --96
 
   encoder = nn.Sequential()
 
