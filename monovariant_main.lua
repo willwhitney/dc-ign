@@ -92,6 +92,8 @@ MODE_TEST = "FT_test"
 
 
 model = init_network2_150_mv(opt.dim_hidden, opt.feature_maps)
+-- model = init_network2_150_mv_addLinear(model)
+
 
 criterion = nn.BCECriterion()
 criterion.sizeAverage = false
@@ -304,3 +306,4 @@ while true do
       testLogger:plot()
    end
 end
+--]]

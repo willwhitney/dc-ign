@@ -273,16 +273,19 @@ function init_network2_150_mv(dim_hidden, feature_maps)
   encoder:add(nn.Reshape((feature_maps/4)*15*15))
 
   local z = nn.ConcatTable()
+
+  local mu = nn.Sequential()
+    mu:add(nn.SelectiveGradientFilter())
+    mu:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
+    mu:add(nn.SelectiveOutputClamp())
+  z:add(mu)
+
   local sigma = nn.Sequential()
     sigma:add(nn.SelectiveGradientFilter())
     sigma:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
     sigma:add(nn.SelectiveOutputClamp())
   z:add(sigma)
-  local mu = nn.Sequential()
-    sigma:add(nn.SelectiveGradientFilter())
-    mu:add(nn.LinearCR((feature_maps/4)*15*15, dim_hidden))
-    sigma:add(nn.SelectiveOutputClamp())
-  z:add(mu)
+
   encoder:add(z)
 
   decoder = nn.Sequential()
