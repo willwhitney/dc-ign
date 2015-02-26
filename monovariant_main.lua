@@ -28,10 +28,12 @@ cmd:text('Options')
 cmd:text('Change these options:')
 cmd:option('--import',            'default',      'the containing folder of the network to load in. does nothing with `no_load`')
 cmd:option('--save',              'default',      'where to save this network and results [DO NOT LEAVE DEFAULT]')
-cmd:option('--datasetdir',        'CNN_DATASET',  'dataset source directory')
+cmd:option('--datasetdir',        '/om/user/wwhitney/facegen/CNN_DATASET',  'dataset source directory')
 
 cmd:option('--dim_hidden',        200,            'dimension of the representation layer')
 cmd:option('--feature_maps',      96,             'number of feature maps')
+
+cmd:option('--clearQ',           false,          'clear the mean and sigma linearCR module and start from scratch')
 
 cmd:option('--no_load',           false,          'do not load in an existing network')
 cmd:option('--shape_bias',        false,          'use more training samples from the shape set')
@@ -127,7 +129,9 @@ else
 end
 
 --reset mean and sigma linear units
-model = init_network2_150_mv_clearLinear(model)
+if opt.clearQ then
+	model = init_network2_150_mv_clearLinear(model)
+end
 
 -- only add in the clamps if they're not already there
 -- if #model:findModules('nn.SelectiveGradientFilter') == 0 then

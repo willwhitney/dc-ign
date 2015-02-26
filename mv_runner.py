@@ -16,49 +16,59 @@ base_networks = {
 # Don't give it a `save` name - that gets generated for you
 jobs = [
         {
-            'import': 'picasso'
-        },
-        {
-            'import': 'braque',
-            'dim_hidden': 120
-        },
-        {
             'import': 'picasso',
-            'learning_rate': -0.001
+	    'clearQ': True,
         },
         {
             'import': 'braque',
             'dim_hidden': 120,
-            'learning_rate': -0.001
+            'clearQ': True,
         },
         {
-            'no_load': True
+            'import': 'picasso',
+            'learning_rate': -0.001,
+            'clearQ': True,
+        },
+        {
+            'import': 'braque',
+            'dim_hidden': 120,
+            'learning_rate': -0.001,
+            'clearQ': True,
         },
         {
             'no_load': True,
-            'learning_rate': -0.001
+            'clearQ': True,
+        },
+        {
+            'no_load': True,
+            'learning_rate': -0.001,
+            'clearQ': True,
         },
         {
             'no_load': True,
             'shape_bias': True,
             'shape_bias_amount': 10,
+            'clearQ': True,
         },
         {
             'no_load': True,
             'shape_bias': True,
             'shape_bias_amount': 10,
-            'learning_rate': -0.001
+            'learning_rate': -0.001,
+            'clearQ': True,
         },
         {
             'no_load': True,
             'shape_bias': True,
             'shape_bias_amount': 80,
+            'clearQ': True,
         },
         {
             'no_load': True,
             'shape_bias': True,
             'shape_bias_amount': 80,
-            'learning_rate': -0.001
+            'learning_rate': -0.001,
+            'clearQ': True,
         }
     ]
 
