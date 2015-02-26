@@ -8,11 +8,11 @@ TOTALFACES = 5230
 num_train_batches = 5000
 num_test_batches =  TOTALFACES-num_train_batches
 
-config = {
-    learningRate = -0.0015,
-    momentumDecay = 0.1,
-    updateDecay = 0.01
-}
+-- config = {
+--     learningRate = -0.0005,
+--     momentumDecay = 0.1,
+--     updateDecay = 0.01
+-- }
 
 
 function init_network1()
@@ -248,11 +248,11 @@ function init_network2_150()
   return model
 end
 
-function init_network2_150_mv()
+function init_network2_150_mv(dim_hidden, feature_maps)
  -- Model Specific parameters
   filter_size = 5
-  dim_hidden = 120--200
-  feature_maps = 96
+  -- dim_hidden = 120--200
+  -- feature_maps = 96
   colorchannels = 1
 
   encoder = nn.Sequential()

@@ -18,23 +18,62 @@ require 'config'
 require 'SelectiveOutputClamp'
 require 'SelectiveGradientFilter'
 
-opt = {
-  cuda = true,
-  threads = 2,
-  save = "MV_lr_0_0015_F96_H120_lr0_0005",
-  import = "F96_H120_lr0_0005",
-  -- dataset_name = "AZ_VARIED",
-  -- free_param_index = 1,
-  num_train_batches = 5000, -- 1050
-  num_train_batches_per_type = 3000, --30
-  num_test_batches = 1400, --90
-  num_test_batches_per_type = 350, --30
-  bsize = 20,
+cmd = torch.CmdLine()
+cmd:text()
+cmd:text()
+cmd:text('Train a network to store particular information in particular nodes.')
+cmd:text()
+cmd:text('Options')
 
-  shape_bias = false,
-  shape_bias_amount = 120,
-  load = true
+cmd:text('Change these options:')
+cmd:option('--save',              'default',  'where to save this network and results [DO NOT LEAVE DEFAULT]')
+cmd:option('--import',            'default',  'the containing folder of the network to load in. does nothing with `no_load`')
+cmd:option('--no_load',           false,      'do not load in an existing network')
+cmd:option('--shape_bias',        false,      'use more training samples from the shape set')
+cmd:option('--shape_bias_amount', 15,         'the ratio of extra samples from shape set. does nothing with `shape_bias`')
+cmd:option('--dim_hidden',        120,        'dimension of the representation layer')
+cmd:option('--feature_maps',      96,         'number of feature maps')
+cmd:option('--learning_rate',     -0.0005,    'learning rate for the network')
+cmd:option('--momentum_decay',    0.1,        'decay rate for momentum in rmsprop')
+
+
+cmd:text()
+cmd:text()
+
+cmd:text("Probably don't change these:")
+cmd:option('--threads',2,'how many threads to use in torch')
+cmd:option('--num_train_batches',5000,'number of batches to train with per epoch')
+cmd:option('--num_train_batches_per_type',3000,'number of available train batches of each data type')
+cmd:option('--num_test_batches',1400,'number of batches to test with')
+cmd:option('--num_test_batches_per_type',350,'number of available test batches of each type')
+cmd:option('--bsize',20,'number of samples per batch')
+
+cmd:text()
+
+opt = cmd:parse(arg)
+
+config = {
+    learningRate = opt.learning_rate,
+    momentumDecay = opt.momentum_decay,
+    updateDecay = 0.01
 }
+
+-- opt = {
+--   threads = 2,
+--   save = "MV_lr_0_0015_F96_H120_lr0_0005",
+--   import = "F96_H120_lr0_0005",
+--   -- dataset_name = "AZ_VARIED",
+--   -- free_param_index = 1,
+--   num_train_batches = 5000, -- 1050
+--   num_train_batches_per_type = 3000, --30
+--   num_test_batches = 1400, --90
+--   num_test_batches_per_type = 350, --30
+--   bsize = 20,
+
+--   -- shape_bias = false,
+--   -- shape_bias_amount = 120,
+--   -- load = true
+-- }
 
 torch.setnumthreads(opt.threads)
 
@@ -44,8 +83,7 @@ MODE_TRAINING = "FT_training"
 MODE_TEST = "FT_test"
 
 
--- model = init_network2_150()
-model = init_network2_150_mv()
+model = init_network2_150_mv(opt.dim_hidden, opt.feature_maps)
 
 criterion = nn.BCECriterion()
 criterion.sizeAverage = false
@@ -53,16 +91,14 @@ criterion.sizeAverage = false
 KLD = nn.KLDCriterion()
 KLD.sizeAverage = false
 
-if opt.cuda then
-  criterion:cuda()
-  KLD:cuda()
-  model:cuda()
-end
+criterion:cuda()
+KLD:cuda()
+model:cuda()
 
 parameters, gradients = model:getParameters()
 print('Num before', #parameters)
 
-if opt.load then
+if not opt.no_load then
   -- load all the values from the network stored in opt.import
   lowerboundlist = torch.load(opt.import .. '/lowerbound.t7')
   lowerbound_test_list = torch.load(opt.import .. '/lowerbound_test.t7')
@@ -86,10 +122,8 @@ end
 --   clamp = nn.SelectiveOutputClamp()
 --   gradFilter = nn.SelectiveGradientFilter()
 
---   if opt.cuda then
 --     clamp:cuda()
 --     gradFilter:cuda()
---   end
 
 --   model:insert(clamp, 3)
 --   model:insert(gradFilter, 3)
@@ -161,9 +195,7 @@ while true do
           gradFilters[clampIndex].active = true
         end
 
-         if opt.cuda then
-            batch = batch:cuda()
-        end
+        batch = batch:cuda()
 
         --Optimization function
         local opfunc = function(x)
