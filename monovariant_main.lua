@@ -30,8 +30,8 @@ cmd:option('--save',              'default',  'where to save this network and re
 cmd:option('--import',            'default',  'the containing folder of the network to load in. does nothing with `no_load`')
 cmd:option('--no_load',           false,      'do not load in an existing network')
 cmd:option('--shape_bias',        false,      'use more training samples from the shape set')
-cmd:option('--shape_bias_amount', 15,         'the ratio of extra samples from shape set. does nothing with `shape_bias`')
-cmd:option('--dim_hidden',        120,        'dimension of the representation layer')
+cmd:option('--shape_bias_amount', 15,         'the ratio of extra samples from shape set. does nothing without `shape_bias`')
+cmd:option('--dim_hidden',        200,        'dimension of the representation layer')
 cmd:option('--feature_maps',      96,         'number of feature maps')
 cmd:option('--learning_rate',     -0.0005,    'learning rate for the network')
 cmd:option('--momentum_decay',    0.1,        'decay rate for momentum in rmsprop')
@@ -78,6 +78,13 @@ config = {
 torch.setnumthreads(opt.threads)
 
 os.execute('mkdir ' .. opt.save)
+
+local f = assert(io.open(opt.save .. '/cmd_options.txt', 'w'))
+for key, val in pairs(opt) do
+  f:write(tostring(key) .. ": " .. tostring(val) .. "\n")
+end
+f:flush()
+f:close()
 
 MODE_TRAINING = "FT_training"
 MODE_TEST = "FT_test"
