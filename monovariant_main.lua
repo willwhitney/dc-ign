@@ -202,8 +202,8 @@ while true do
             clamps[clampIndex]:setPassthroughIndices(3)
             gradFilters[clampIndex]:setPassthroughIndices(3)
           elseif dataset_type == 4 then
-            clamps[clampIndex]:setPassthroughIndices({4,120})
-            gradFilters[clampIndex]:setPassthroughIndices({4,120})
+            clamps[clampIndex]:setPassthroughIndices({4,opt.dim_hidden})
+            gradFilters[clampIndex]:setPassthroughIndices({4,opt.dim_hidden})
           end
 
           clamps[clampIndex].active = true

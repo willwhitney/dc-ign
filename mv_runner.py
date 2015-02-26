@@ -16,54 +16,68 @@ base_networks = {
 # Don't give it a `save` name - that gets generated for you
 jobs = [
         {
-            'import': 'picasso'
-        },
-        {
-            'import': 'braque',
-            'dim_hidden': 120
-        },
-        {
             'import': 'picasso',
-            'learning_rate': -0.001
+            'shape_bias': True,
+            'shape_bias_amount': 10
+
         },
         {
             'import': 'braque',
             'dim_hidden': 120,
-            'learning_rate': -0.001
-        },
-        {
-            'no_load': True
-        },
-        {
-            'no_load': True,
-            'learning_rate': -0.001
-        },
-        {
-            'no_load': True,
             'shape_bias': True,
-            'shape_bias_amount': 10,
+            'shape_bias_amount': 10
         },
         {
-            'no_load': True,
+            'import': 'picasso',
             'shape_bias': True,
-            'shape_bias_amount': 10,
-            'learning_rate': -0.001
+            'shape_bias_amount': 40
+
         },
         {
-            'no_load': True,
+            'import': 'braque',
+            'dim_hidden': 120,
             'shape_bias': True,
-            'shape_bias_amount': 80,
+            'shape_bias_amount': 40
         },
         {
-            'no_load': True,
+            'import': 'picasso',
             'shape_bias': True,
-            'shape_bias_amount': 80,
-            'learning_rate': -0.001
+            'shape_bias_amount': 100
+
         }
+        # {
+        #     'no_load': True
+        # },
+        # {
+        #     'no_load': True,
+        #     'learning_rate': -0.001
+        # },
+        # {
+        #     'no_load': True,
+            # 'shape_bias': True,
+            # 'shape_bias_amount': 10,
+        # },
+        # {
+        #     'no_load': True,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 10,
+        #     'learning_rate': -0.001
+        # },
+        # {
+        #     'no_load': True,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 80,
+        # },
+        # {
+        #     'no_load': True,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 80,
+        #     'learning_rate': -0.001
+        # }
     ]
 
 for job in jobs:
-    jobname = "MV"
+    jobname = "MV_lategradfilter_fixedindices"
     flagstring = ""
     for flag in job:
         if isinstance(job[flag], bool):
