@@ -19,7 +19,6 @@ jobs = [
             'import': 'picasso',
             'shape_bias': True,
             'shape_bias_amount': 10
-
         },
         {
             'import': 'braque',
@@ -31,7 +30,6 @@ jobs = [
             'import': 'picasso',
             'shape_bias': True,
             'shape_bias_amount': 40
-
         },
         {
             'import': 'braque',
@@ -43,7 +41,6 @@ jobs = [
             'import': 'picasso',
             'shape_bias': True,
             'shape_bias_amount': 100
-
         }
         # {
         #     'no_load': True
