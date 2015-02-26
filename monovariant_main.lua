@@ -96,7 +96,6 @@ MODE_TEST = "FT_test"
 
 
 model = init_network2_150_mv(opt.dim_hidden, opt.feature_maps)
--- model = init_network2_150_mv_addLinear(model)
 
 
 criterion = nn.BCECriterion()
@@ -126,6 +125,9 @@ if not opt.no_load then
 else
   epoch = 1
 end
+
+--reset mean and sigma linear units
+model = init_network2_150_mv_clearLinear(model)
 
 -- only add in the clamps if they're not already there
 -- if #model:findModules('nn.SelectiveGradientFilter') == 0 then

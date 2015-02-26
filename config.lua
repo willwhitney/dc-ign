@@ -321,11 +321,16 @@ function init_network2_150_mv(dim_hidden, feature_maps)
 end
 
 
-function init_network2_150_mv_addLinear(model)
+function init_network2_150_mv_clearLinear(model)
   print(model)
+  mean_linear = model.modules[1].modules[11].modules[1].modules[2]
+  sigm_linear = model.modules[1].modules[11].modules[2].modules[2]
+  mean_linear:reset()
+  sigm_linear:reset()
   -- model:forward(torch.rand(1,1,150,150):cuda())
   -- fanin = model.modules[1].modules[10].output:size()[2]
   -- print(model.modules[1].mod)
+  return model
 end
 
 
