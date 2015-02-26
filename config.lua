@@ -318,6 +318,14 @@ function init_network2_150_mv(dim_hidden, feature_maps)
 end
 
 
+function init_network2_150_mv_addLinear(model)
+  print(model)
+  -- model:forward(torch.rand(1,1,150,150):cuda())
+  -- fanin = model.modules[1].modules[10].output:size()[2]
+  -- print(model.modules[1].mod)
+end
+
+
 function init_network2_color_width64()
  -- Model Specific parameters
   filter_size = 5
