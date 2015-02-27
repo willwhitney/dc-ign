@@ -14,14 +14,30 @@ require 'GaussianCriterion'
 require 'testf'
 require 'utils'
 require 'config'
+require 'SelectiveOutputClamp'
+require 'SelectiveGradientFilter'
+
+UNSUP = true
 
 
-MODE_TEST = 'test'
 opt = {}
-opt.save = 'F96_H120_lr0_0005_BACKUP6'
--- model = torch.load('F96_H120/vxnet.net')
-model = init_network2_150()
+
+if UNSUP then
+	MODE_TEST = 'test'
+	opt.save = 'F96_H120_lr0_0005_BACKUP7'
+	model = init_network2_150()
+else
+	MODE_TEST = 'FT_test'
+	opt.save = 'MV_lategradfilter_fixedindices_import_picasso_shape_bias_shape_bias_amount_100'
+	model = init_network2_150_mv(200, 96)
+	clamps = model:findModules('nn.SelectiveOutputClamp')
+	gradFilters = model:findModules('nn.SelectiveGradientFilter')
+	opt.num_test_batches_per_type = 350
+	opt.datasetdir = 'DATASET/TRANSFORMATION_DATASET'
+end
+
 parameters, gradients = model:getParameters()
+print('parameters ssize:', #parameters)
 
 print("Loading old weights!")
 print(opt.save)
@@ -44,5 +60,8 @@ KLD.sizeAverage = false
 criterion:cuda()
 KLD:cuda()
 
-
-testf(true)
+if UNSUP then
+	testf(true)
+else
+	testf_MV(true)
+end

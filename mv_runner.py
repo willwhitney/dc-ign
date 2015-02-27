@@ -14,94 +14,77 @@ base_networks = {
         'brunelleschi': networks_dir + 'brunelleschi'
     }
 
+isClearQ = False
 # Don't give it a `save` name - that gets generated for you
 jobs = [
         {
-            'import': 'brunelleschi',
+
+            'import': 'picasso',
             'shape_bias': True,
-            'shape_bias_amount': 100
-        }
-        # {
-        #     'import': 'brunelleschi',
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 8
-        # },
-        # {
-        #     'import': 'brunelleschi',
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 20
-        # },
-        # {
-        #     'import': 'brunelleschi',
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 40
-        # }
-        # {
-        #     'import': 'braque',
-        #     'dim_hidden': 120,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 10
-        # },
-        # {
-        #     'import': 'picasso',
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 40
-        # },
-        # {
-        #     'import': 'braque',
-        #     'dim_hidden': 120,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 40
-        # },
-        # {
-        #     'import': 'picasso',
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 100
-        # }
-        # {
-        #     'no_load': True
-        # },
-        # {
-        #     'no_load': True,
-        #     'learning_rate': -0.001
-        # },
-        # {
-        #     'no_load': True,
-            # 'shape_bias': True,
-            # 'shape_bias_amount': 10,
-        # },
-        # {
-        #     'no_load': True,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 10,
-        #     'learning_rate': -0.001
-        # },
-        # {
-        #     'no_load': True,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 5,
-        # },
-        # {
-        #     'no_load': True,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 6,
-        # },
-        # {
-        #     'no_load': True,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 8,
-        # }
-        # {
-        #     'no_load': True,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 80,
-        # },
-        # {
-        #     'no_load': True,
-        #     'shape_bias': True,
-        #     'shape_bias_amount': 80,
-        #     'learning_rate': -0.001
-        # }
+            'shape_bias_amount': 10,
+	        'clearQ': isClearQ
+        },
+        {
+            'import': 'braque',
+            'dim_hidden': 120,
+            'shape_bias': True,
+            'shape_bias_amount': 10,
+            'clearQ': isClearQ
+        },
+        {
+            'import': 'picasso',
+            'shape_bias': True,
+            'shape_bias_amount': 40,
+            'clearQ': isClearQ
+        },
+        {
+            'import': 'braque',
+            'dim_hidden': 120,
+            'shape_bias': True,
+            'shape_bias_amount': 40,
+            'clearQ': isClearQ
+        },
+        {
+            'import': 'picasso',
+            'shape_bias': True,
+            'shape_bias_amount': 100,
+            'clearQ': isClearQ
+        },
+         {
+             'no_load': True,
+            'clearQ': isClearQ
+         },
+         {
+              'no_load': True,
+             'learning_rate': -0.001,
+            'clearQ': isClearQ
+         },
+         {
+             'no_load': True,
+             'shape_bias': True,
+             'shape_bias_amount': 10,
+            'clearQ': isClearQ
+         },
+         {
+             'no_load': True,
+             'shape_bias': True,
+             'shape_bias_amount': 10,
+             'learning_rate': -0.001,
+            'clearQ': isClearQ
+         },
+         {
+             'no_load': True,
+             'shape_bias': True,
+             'shape_bias_amount': 80,
+            'clearQ': isClearQ
+         },
+         {
+             'no_load': True,
+             'shape_bias': True,
+             'shape_bias_amount': 80,
+             'learning_rate': -0.001,
+            'clearQ': isClearQ
+         }
     ]
 
 for job in jobs:
