@@ -9,39 +9,55 @@ if not os.path.exists("slurm_scripts"):
 
 networks_dir = '/om/user/wwhitney/facegen_networks/'
 base_networks = {
-        'picasso': networks_dir + 'picasso',
-        'braque': networks_dir + 'braque'
+        'picasso':      networks_dir + 'picasso',
+        'braque':       networks_dir + 'braque',
+        'brunelleschi': networks_dir + 'brunelleschi'
     }
 
 # Don't give it a `save` name - that gets generated for you
 jobs = [
         {
-            'import': 'picasso',
-            'shape_bias': True,
-            'shape_bias_amount': 10
-        },
-        {
-            'import': 'braque',
-            'dim_hidden': 120,
-            'shape_bias': True,
-            'shape_bias_amount': 10
-        },
-        {
-            'import': 'picasso',
-            'shape_bias': True,
-            'shape_bias_amount': 40
-        },
-        {
-            'import': 'braque',
-            'dim_hidden': 120,
-            'shape_bias': True,
-            'shape_bias_amount': 40
-        },
-        {
-            'import': 'picasso',
+            'import': 'brunelleschi',
             'shape_bias': True,
             'shape_bias_amount': 100
         }
+        # {
+        #     'import': 'brunelleschi',
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 8
+        # },
+        # {
+        #     'import': 'brunelleschi',
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 20
+        # },
+        # {
+        #     'import': 'brunelleschi',
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 40
+        # }
+        # {
+        #     'import': 'braque',
+        #     'dim_hidden': 120,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 10
+        # },
+        # {
+        #     'import': 'picasso',
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 40
+        # },
+        # {
+        #     'import': 'braque',
+        #     'dim_hidden': 120,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 40
+        # },
+        # {
+        #     'import': 'picasso',
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 100
+        # }
         # {
         #     'no_load': True
         # },
@@ -60,6 +76,21 @@ jobs = [
         #     'shape_bias_amount': 10,
         #     'learning_rate': -0.001
         # },
+        # {
+        #     'no_load': True,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 5,
+        # },
+        # {
+        #     'no_load': True,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 6,
+        # },
+        # {
+        #     'no_load': True,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 8,
+        # }
         # {
         #     'no_load': True,
         #     'shape_bias': True,
