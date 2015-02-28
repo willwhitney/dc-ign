@@ -9,80 +9,33 @@ if not os.path.exists("slurm_scripts"):
 
 networks_dir = '/om/user/wwhitney/facegen_networks/'
 base_networks = {
-        'picasso': networks_dir + 'picasso',
-        'braque': networks_dir + 'braque'
+        'picasso':      networks_dir + 'picasso',
+        'braque':       networks_dir + 'braque',
+        'brunelleschi': networks_dir + 'brunelleschi',
+        'donatello':    networks_dir + 'donatello'
     }
 
-isClearQ = True
+
 # Don't give it a `save` name - that gets generated for you
 jobs = [
         {
-            'import': 'picasso',
-            'shape_bias': True,
-            'shape_bias_amount': 10,
-	    'clearQ': isClearQ
-        },
-        {
-            'import': 'braque',
-            'dim_hidden': 120,
-            'shape_bias': True,
-            'shape_bias_amount': 10,
-            'clearQ': isClearQ
-        },
-        {
-            'import': 'picasso',
-            'shape_bias': True,
-            'shape_bias_amount': 40,
-            'clearQ': isClearQ
-        },
-        {
-            'import': 'braque',
-            'dim_hidden': 120,
-            'shape_bias': True,
-            'shape_bias_amount': 40,
-            'clearQ': isClearQ
-        },
-        {
-            'import': 'picasso',
+            'import': 'donatello',
             'shape_bias': True,
             'shape_bias_amount': 100,
-            'clearQ': isClearQ
+            'learning_rate': -0.0002
         },
-         {
-             'no_load': True,
-            'clearQ': isClearQ
-         },
-         {
-              'no_load': True,
-             'learning_rate': -0.001,
-            'clearQ': isClearQ
-         },
-         {
-             'no_load': True,
-             'shape_bias': True,
-             'shape_bias_amount': 10,
-            'clearQ': isClearQ
-         },
-         {
-             'no_load': True,
-             'shape_bias': True,
-             'shape_bias_amount': 10,
-             'learning_rate': -0.001,
-            'clearQ': isClearQ
-         },
-         {
-             'no_load': True,
-             'shape_bias': True,
-             'shape_bias_amount': 80,
-            'clearQ': isClearQ
-         },
-         {
-             'no_load': True,
-             'shape_bias': True,
-             'shape_bias_amount': 80,
-             'learning_rate': -0.001,
-            'clearQ': isClearQ
-         }
+        {
+            'import': 'donatello',
+            'shape_bias': True,
+            'shape_bias_amount': 200,
+            'learning_rate': -0.0002
+        },
+        {
+            'import': 'donatello',
+            'shape_bias': True,
+            'shape_bias_amount': 400,
+            'learning_rate': -0.0002
+        }
     ]
 
 for job in jobs:

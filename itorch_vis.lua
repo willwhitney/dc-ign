@@ -30,3 +30,5 @@ for i=1, preds:size()[1] do
     itorch.image({gt_img, inf_img})
 end
 
+
+
