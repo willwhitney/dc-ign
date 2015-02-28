@@ -34,11 +34,13 @@ require 'lfs'
 
 
 -- networks whose names contain this string will be rendered
-network_search_str = "MV_lategradfilter"
+network_search_str = "MV_lategrad"
+-- base_directory = "/om/user/tejask/facegen"
+base_directory = lfs.currentdir()
 
-
-local reconstruction_path = 'renderings/reconstruction'
-local generalization_path = 'renderings/generalization'
+local jobname = network_search_str ..'_'.. os.date("%b_%d")
+local reconstruction_path = 'renderings/'..jobname..'/reconstruction'
+local generalization_path = 'renderings/'..jobname..'/generalization'
 os.execute('mkdir -p '..reconstruction_path)
 os.execute('mkdir -p '..generalization_path)
 
@@ -88,19 +90,19 @@ end
 
 
 ---------------------- RECONSTRUCTION ----------------------
--- id=1
--- for network_name in lfs.dir(lfs.currentdir()) do
---   local network_path = network_name
+-- local id=1
+-- for network_name in lfs.dir(base_directory) do
+--   local network_path = base_directory .. '/' .. network_name
+--   print(network_path)
 --   if lfs.attributes(network_path).mode == 'directory' then
 --     if string.find(network_name, network_search_str) then
-
+--       print(network_name)
 --       local images = {}
 --       for _, dataset_type in ipairs(dataset_types) do
---         local last_epoch = lastepochnum('tmp/'..network_name.."/"..dataset_type)
---         local id = 1
+--         local last_epoch = lastepochnum(base_directory ..'/tmp/'..network_name.."/"..dataset_type)
 
 --         local reconstruction_gt = torch.load('CNN_DATASET/th_'..dataset_type..'/FT_test/batch' .. id)
---         local preds = torch.load('tmp/'..network_name.."/"..dataset_type.."/epoch_"..last_epoch..'/preds' ..id)
+--         local preds = torch.load(base_directory ..'/tmp/'..network_name.."/"..dataset_type.."/epoch_"..last_epoch..'/preds' ..id)
 
 
 --         for i=1, preds:size()[1] do
@@ -127,10 +129,10 @@ end
 local data_location = '/om/user/tejask/facemachine/CNN_DATASET/AZ_VARIED/face_1'
 local bsize = 20
 
-skipnum = 14
+skipnum = 0
 network_index = 1
-for network_name in lfs.dir(lfs.currentdir()) do
-  local network_path = network_name
+for network_name in lfs.dir(base_directory) do
+  local network_path = base_directory .. '/' .. network_name
   if lfs.attributes(network_path).mode == 'directory' then
     if string.find(network_name, network_search_str) then
       if network_index <= skipnum then
