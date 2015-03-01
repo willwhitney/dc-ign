@@ -35,10 +35,16 @@ require 'lfs'
 
 -- networks whose names contain this string will be rendered
 network_search_str = "MV_lategrad"
--- base_directory = "/om/user/tejask/facegen"
-base_directory = lfs.currentdir()
 
-local jobname = network_search_str ..'_'.. os.date("%b_%d")
+if true then
+  base_directory = "/om/user/wwhitney/facegen"
+else
+  base_directory = lfs.currentdir()
+end
+name_modifier_str = "pm_15"
+
+
+local jobname = network_search_str ..'_'.. os.date("%b_%d") ..'_'.. name_modifier_str
 local reconstruction_path = 'renderings/'..jobname..'/reconstruction'
 local generalization_path = 'renderings/'..jobname..'/generalization'
 os.execute('mkdir -p '..reconstruction_path)
@@ -63,29 +69,31 @@ function lastepochnum(path)
 end
 
 function saveImageGrid(filepath, images)
-  image_width = 150
-  padding = 5
-  images_across = #images[1]
-  images_down = #images
-  -- print(images_down, images_across)
+  if images ~= nil and images[1] ~= nil then
+    image_width = 150
+    padding = 5
+    images_across = #images[1]
+    images_down = #images
+    -- print(images_down, images_across)
 
-  image_output = torch.zeros(
-                    image_width * images_down + (images_down - 1) * padding,
-                    image_width * images_across + (images_across - 1) * padding)
-  for i, image_row in ipairs(images) do
-    for j, image in ipairs(image_row) do
-      y_index = j - 1
-      y_location = y_index * image_width + y_index * padding
-      x_index = i - 1
-      x_location = (x_index) * image_width + x_index * padding
-      -- print({{x_location + 1, x_location + image_width},
-      --           {y_location + 1, y_location + image_width}})
-      image_output[{{x_location + 1, x_location + image_width},
-                {y_location + 1, y_location + image_width}}] = image
+    image_output = torch.zeros(
+                      image_width * images_down + (images_down - 1) * padding,
+                      image_width * images_across + (images_across - 1) * padding)
+    for i, image_row in ipairs(images) do
+      for j, image in ipairs(image_row) do
+        y_index = j - 1
+        y_location = y_index * image_width + y_index * padding
+        x_index = i - 1
+        x_location = (x_index) * image_width + x_index * padding
+        -- print({{x_location + 1, x_location + image_width},
+        --           {y_location + 1, y_location + image_width}})
+        image_output[{{x_location + 1, x_location + image_width},
+                  {y_location + 1, y_location + image_width}}] = image
+      end
     end
+    image_output = image_output:reshape(1, image_output:size()[1], image_output:size()[2])
+    image.save(filepath, image_output)
   end
-  image_output = image_output:reshape(1, image_output:size()[1], image_output:size()[2])
-  image.save(filepath, image_output)
 end
 
 
@@ -93,27 +101,29 @@ end
 -- local id=1
 -- for network_name in lfs.dir(base_directory) do
 --   local network_path = base_directory .. '/' .. network_name
---   print(network_path)
+--   -- print(network_path)
 --   if lfs.attributes(network_path).mode == 'directory' then
 --     if string.find(network_name, network_search_str) then
 --       print(network_name)
 --       local images = {}
 --       for _, dataset_type in ipairs(dataset_types) do
---         local last_epoch = lastepochnum(base_directory ..'/tmp/'..network_name.."/"..dataset_type)
+--         if lfs.attributes(base_directory ..'/tmp/'..network_name.."/"..dataset_type) ~= nil then
+--           local last_epoch = lastepochnum(base_directory ..'/tmp/'..network_name.."/"..dataset_type)
 
---         local reconstruction_gt = torch.load('CNN_DATASET/th_'..dataset_type..'/FT_test/batch' .. id)
---         local preds = torch.load(base_directory ..'/tmp/'..network_name.."/"..dataset_type.."/epoch_"..last_epoch..'/preds' ..id)
+--           local reconstruction_gt = torch.load('CNN_DATASET/th_'..dataset_type..'/FT_test/batch' .. id)
+--           local preds = torch.load(base_directory ..'/tmp/'..network_name.."/"..dataset_type.."/epoch_"..last_epoch..'/preds' ..id)
 
 
---         for i=1, preds:size()[1] do
---           local image_row = {}
---           local gt_img = reconstruction_gt[i]
---           local inf_img = preds[i]
---           table.insert(image_row, gt_img)
---           table.insert(image_row, inf_img)
---           -- image.save('reconstruction_gt_'..tostring(i)..'.png', gt_img)
---           -- image.save(tostring(i)..'.png', gt_img)
---           table.insert(images, image_row)
+--           for i=1, preds:size()[1] do
+--             local image_row = {}
+--             local gt_img = reconstruction_gt[i]
+--             local inf_img = preds[i]
+--             table.insert(image_row, gt_img)
+--             table.insert(image_row, inf_img)
+--             -- image.save('reconstruction_gt_'..tostring(i)..'.png', gt_img)
+--             -- image.save(tostring(i)..'.png', gt_img)
+--             table.insert(images, image_row)
+--           end
 --         end
 
 --       end
@@ -142,7 +152,17 @@ for network_name in lfs.dir(base_directory) do
         collectgarbage()
         cutorch.synchronize()
 
-        local model = torch.load(network_path .. '/vxnet.net')
+        local model
+        if true then
+          model = torch.load(network_path .. '/vxnet.net')
+        else
+          model = init_network2_150_mv(200, 96)
+          local parameters, gradients = model:getParameters()
+
+          p = torch.load(network_path .. '/parameters.t7')
+          parameters:copy(p)
+        end
+
         local images = {}
 
         local batch = torch.zeros(bsize,1,150,150)
@@ -186,6 +206,7 @@ for network_name in lfs.dir(base_directory) do
             table.insert(image_list, inf_image)
 
             for i=1,2 do
+            -- for i=-20, 20, 10 do
               local indxs = torch.Tensor({dataset_index})--torch.randperm(200)[{{1,10}}]
               local repam_out = orig_repam_out:clone()
 
@@ -214,7 +235,7 @@ for network_name in lfs.dir(base_directory) do
   end
 end
 
-
+print("done")
 
 
 
