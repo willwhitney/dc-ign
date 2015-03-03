@@ -34,9 +34,9 @@ require 'lfs'
 
 
 -- networks whose names contain this string will be rendered
-network_search_str = "MV_lategrad"
+network_search_str = "MV_lategradfilter_fixedindices_no_load"
 
-if true then
+if false then
   base_directory = "/om/user/wwhitney/facegen"
 else
   base_directory = lfs.currentdir()
@@ -135,8 +135,8 @@ end
 
 
 ---------------------- GENERALIZATION ----------------------
-
-local data_location = '/om/user/tejask/facemachine/CNN_DATASET/AZ_VARIED/face_1'
+faceid = 4
+local data_location = '/home/tejas/Documents/MIT/facegen/DATASET/CNN_DATASET/AZ_VARIED/face_' .. faceid
 local bsize = 20
 
 skipnum = 0
@@ -153,7 +153,7 @@ for network_name in lfs.dir(base_directory) do
         cutorch.synchronize()
 
         local model
-        if true then
+        if false then
           model = torch.load(network_path .. '/vxnet.net')
         else
           model = init_network2_150_mv(200, 96)
@@ -226,7 +226,7 @@ for network_name in lfs.dir(base_directory) do
             end
             table.insert(images, image_list)
           end
-          saveImageGrid(generalization_path..'/'..network_name..'.png', images)
+          saveImageGrid(generalization_path..'/'..network_name.. faceid .. '.png', images)
 
         end
         network_index = network_index + 1
