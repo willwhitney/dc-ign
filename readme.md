@@ -7,7 +7,7 @@ This repository contains the code for the network described in http://arxiv.org/
 ![A DC-IGN lighting demo](http://i.imgur.com/ukoMSxt.gif)
 
 <!-- Click for the full video. -->
-
+Project Website: http://willwhitney.github.io/dc-ign/www/
 ## Running
 
 ### Requirements
