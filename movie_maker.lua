@@ -34,8 +34,8 @@ require 'lfs'
 
 
 -- networks whose names contain this string will be rendered
--- network_search_str = "donatello"
-network_search_str = "MV_lategradfilter_fixedindices_import_donatello_shape_bias_shape_bias_amount_400"
+-- network_search_str = "brunelleschi"
+network_search_str = "IV_0.01_brun"
 
 if true then
   -- base_directory = "/om/user/wwhitney/facegen_networks"
@@ -44,7 +44,7 @@ else
   base_directory = lfs.currentdir()
 end
 
-local name_modifier_str = "light"
+local name_modifier_str = "anim_all"
 
 local jobname = network_search_str ..'_'.. os.date("%b_%d") ..'_'.. name_modifier_str
 local output_path = 'movies/'..jobname
@@ -106,7 +106,7 @@ function getModel()
         -- cutorch.synchronize()
 
         local model
-        if false then
+        if true then
           model = torch.load(network_path .. '/vxnet.net')
         else
           model = init_network2_150_mv(200, 96)
@@ -125,16 +125,17 @@ end
 
 function rotationTensor(length)
   local out = torch.Tensor(100)
-  local rightmin = 2
-  local rightmax = 29
+  local rightmin = 4
+  local rightmax = 30
   local leftmin = -30
   local leftmax = -4
   out[{{1, 25}}] = torch.range(rightmax - 1,rightmin,-(rightmax - rightmin) / 25)
   out[{{26,50}}] = torch.range(rightmin,rightmax - 1,(rightmax - rightmin) / 25)
-  -- out[{{51,75}}] = torch.range(leftmin,leftmax - 1,(leftmax - leftmin) / 25)
-  -- out[{{76,100}}] = torch.range(leftmax - 1,leftmin, -(leftmax - leftmin) / 25)
-  out[{{51,75}}] = torch.range(leftmax - 1, leftmin, -(leftmax - leftmin) / 25)
-  out[{{76,100}}] = torch.range(leftmin, leftmax - 1, (leftmax - leftmin) / 25)
+  out[{{51,75}}] = torch.range(leftmin,leftmax - 1,(leftmax - leftmin) / 25)
+  out[{{76,100}}] = torch.range(leftmax - 1,leftmin, -(leftmax - leftmin) / 25)
+
+  -- out[{{51,75}}] = torch.range(leftmax - 1, leftmin, -(leftmax - leftmin) / 25)
+  -- out[{{76,100}}] = torch.range(leftmin, leftmax - 1, (leftmax - leftmin) / 25)
   return out
 
   -- return torch.range(-49,50)
@@ -156,7 +157,9 @@ for clampIndex = 1, #clamps do
     gradFilters[clampIndex].active = false
 end
 
-local param_values = torch.sin(torch.range(0,64) * math.pi / 32) * 20
+-- local param_values = torch.sin(torch.range(0,64) * math.pi / 32) * 10
+local param_values = (torch.sin(torch.range(0,64) * math.pi / 32) + 1) * 10 + 4
+
 -- local param_values = rotationTensor()
 
 local timesteps = param_values:size()[1]
@@ -171,9 +174,12 @@ for i = 1, timesteps do
   repam_out[i] = orig_repam_out[1]:clone()
 end
 
-
-
+repam_out[{{}, 1}] = param_values
+repam_out[{{}, 2}] = param_values
 repam_out[{{}, 3}] = param_values
+-- local ANIMATED_VARIABLE = 2
+
+-- repam_out[{{}, ANIMATED_VARIABLE}] = param_values
 local output = decoder:forward(repam_out:cuda())
 
 

@@ -52,6 +52,8 @@ end
 function SelectiveGradientFilter:reset()
     self.passthrough = nil
     self.active = true
+    self.force_invariance = false
+    self.invariance_strength = 0
 end
 
 function SelectiveGradientFilter:updateOutput(input)
@@ -62,14 +64,34 @@ end
 function SelectiveGradientFilter:updateGradInput(input, gradOutput)
     if self.active then
         if self.passthrough == nil then
-            self.gradInput:resizeAs(gradOutput)
-            self.gradInput:fill(0)
-            -- self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
+            if self.force_invariance then
+                self.gradInput:resizeAs(input)
+
+                local target = torch.mean(input, 1) -- mean over all the elements in the batch
+                for i = 1, input:size()[1] do
+                    self.gradInput[{{i}}] = input[i] - target -- grad should increase (actual - correct)
+                end
+                self.gradInput = self.gradInput * self.invariance_strength
+            else
+                self.gradInput:resizeAs(gradOutput)
+                self.gradInput:fill(0)
+            end
         else
-            self.gradInput:resizeAs(gradOutput)
-            self.gradInput:fill(0)
-            self.gradInput[{{}, self.passthrough}] = gradOutput[{{}, self.passthrough}]
-            -- self.gradInput[1] = gradOutput[1] -- let it learn from one sample per batch
+            if self.force_invariance then
+                self.gradInput:resizeAs(input)
+
+                local target = torch.mean(input, 1) -- mean over all the elements in the batch
+                for i = 1, input:size()[1] do
+                    self.gradInput[{{i}}] = input[i] - target -- grad should increase (actual - correct)
+                end
+                self.gradInput = self.gradInput * self.invariance_strength
+
+                self.gradInput[{{}, self.passthrough}] = gradOutput[{{}, self.passthrough}]
+            else
+                self.gradInput:resizeAs(gradOutput)
+                self.gradInput:fill(0)
+                self.gradInput[{{}, self.passthrough}] = gradOutput[{{}, self.passthrough}]
+            end
         end
     else
         self.gradInput:resizeAs(gradOutput):copy(gradOutput)
@@ -77,3 +99,21 @@ function SelectiveGradientFilter:updateGradInput(input, gradOutput)
 
     return self.gradInput
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

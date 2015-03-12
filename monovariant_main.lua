@@ -33,7 +33,9 @@ cmd:option('--datasetdir',        '/om/user/wwhitney/facegen/CNN_DATASET',  'dat
 cmd:option('--dim_hidden',        200,            'dimension of the representation layer')
 cmd:option('--feature_maps',      96,             'number of feature maps')
 
-cmd:option('--clearQ',           false,          'clear the mean and sigma linearCR module and start from scratch')
+cmd:option('--force_invariance',  false,          'propagate error equal to change in outputs corresponding to fixed variables')
+cmd:option('--invariance_strength',0,          'multiplier for the invariance error signal')
+cmd:option('--clearQ',            false,          'clear the mean and sigma linearCR module and start from scratch')
 
 cmd:option('--no_load',           false,          'do not load in an existing network')
 cmd:option('--shape_bias',        false,          'use more training samples from the shape set')
@@ -87,7 +89,6 @@ os.execute('mkdir ' .. opt.save)
 
 local f = assert(io.open(opt.save .. '/cmd_options.txt', 'w'))
 for key, val in pairs(opt) do
-
   f:write(tostring(key) .. ": " .. tostring(val) .. "\n")
 end
 f:flush()
@@ -152,6 +153,11 @@ end
 clamps = model:findModules('nn.SelectiveOutputClamp')
 gradFilters = model:findModules('nn.SelectiveGradientFilter')
 -- end
+
+for clampIndex = 1, #clamps do
+  gradFilters[clampIndex].force_invariance  = opt.force_invariance
+  gradFilters[clampIndex].invariance_strength  = opt.invariance_strength
+end
 
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0

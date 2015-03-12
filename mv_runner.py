@@ -18,28 +18,73 @@ base_networks = {
 
 # Don't give it a `save` name - that gets generated for you
 jobs = [
+        # {
+        #     'no_load': True,
+        # },
+        # {
+        #     'no_load': True,
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.1
+        # }
+        # {
+        #     'no_load': True,
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.01
+        # },
+        # {
+        #     'no_load': True,
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.001
+        # },
+        # {
+        #     'no_load': True,
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.0001
+        # },
+        # {
+        #     'import': 'brunelleschi',
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.01,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 10
+
+        # },
+        # {
+        #     'import': 'brunelleschi',
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.01,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 40
+
+        # },
+        # {
+        #     'import': 'brunelleschi',
+        #     'force_invariance': True,
+        #     'invariance_strength': 0.01,
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 100
+
+        # }
         {
             'import': 'donatello',
-            'shape_bias': True,
-            'shape_bias_amount': 100,
-            'learning_rate': -0.0002
+            'force_invariance': True,
+            'invariance_strength': 0.01
         },
         {
             'import': 'donatello',
-            'shape_bias': True,
-            'shape_bias_amount': 200,
-            'learning_rate': -0.0002
-        },
-        {
-            'import': 'donatello',
-            'shape_bias': True,
-            'shape_bias_amount': 400,
-            'learning_rate': -0.0002
+            'force_invariance': True,
+            'invariance_strength': 0.001
         }
+        # {
+        #     'import': 'donatello',
+        #     'shape_bias': True,
+        #     'shape_bias_amount': 400,
+        #     'learning_rate': -0.0002
+        # }
     ]
 
 for job in jobs:
-    jobname = "MV_lategradfilter_fixedindices"
+    jobname = "invariance_scaled"
     flagstring = ""
     for flag in job:
         if isinstance(job[flag], bool):
