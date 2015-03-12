@@ -1,1 +1,160 @@
-Hello World
+
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="A layout example that shows off a responsive product landing page.">
+
+<title>Deep Convolutional Inverse Graphics Network</title>
+
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.3.0/pure-min.css">
+
+<link rel="stylesheet" href="style.css">
+
+    
+<script src="http://use.typekit.net/gis6vng.js"></script>
+<script>
+    try { Typekit.load(); } catch (e) {}
+</script>
+
+
+    
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-41480445-1', 'purecss.io');
+ga('send', 'pageview');
+</script>
+
+
+</head>
+<body>
+
+
+
+
+
+
+<div class="content">
+    <div class="header">
+        <div class="pure-menu pure-menu-open pure-menu-fixed pure-menu-horizontal">
+                <div align="left">
+                    <img src="Untitled.jpg" height="7%" width="7%" >
+                </div>
+<!--             <ul>
+                <li class="pure-menu-selected"><a href="#">Home</a></li>
+                <li><a href="people.html">People</a></li>
+            </ul> -->
+                <div style="margin-top:-50px;" align="right">
+                    <img src="http://edtechtimes.com/wp-content/uploads/2012/06/csail.jpg" height="3%" width="3%" >
+                    <img src="http://cloudtimes.org/wp-content/uploads/2013/03/mit-logo.jpg" height="8%" width="8%" >
+                    <img src="http://bcs.mit.edu/docs/Logo+Type%201218x345%2072dpi%20GIF.gif" height="8%" width="8%" > 
+                </div>
+        </div>
+    </div>
+
+    <div class="splash">
+        <div class="pure-g-r">
+            <div class="pure-u-1-3">
+                <div class="l-box splash-image">
+                    <img src="azvaried.png" style="height:41.5%;width:41.5%"
+                         alt="Placeholder image for example.">
+                    <img src="lightvaried.png" style="height:40%;width:40%"
+                         alt="Placeholder image for example.">
+
+                    <p> 
+                        Demo of our model re-rendering a given static image with different 3D sweeps on (a) elevation and (b) azimuth and (c) light neurons.
+                    </p>
+                    <p> 
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        (a)  
+                        <video width="100" height="100" controls>
+                        <source src="nod.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                        </video>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        (b)
+                        <video width="100" height="100" controls>
+                        <source src="shake_right.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                        </video>
+                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                        (c)
+                        <video width="100" height="100" controls>
+                        <source src="light.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                        </video>
+                    </p>
+                </div>
+            </div>
+
+            <div class="pure-u-2-3">
+                <div class="l-box splash-text">
+                    <h1 class="splash-head">
+                        Deep Convolutional Inverse Graphics Network
+                    </h1>
+
+                    <h2 class="splash-subhead">
+                        This paper presents the Deep Convolution Inverse Graphics Network (DC-IGN) that aims to learn an interpretable representation of images that is disentangled with respect to various transformations such as object out-of-plane rotations, lighting variations, and texture. The DC-IGN model is composed of multiple layers of convolution and de-convolution operators and is trained using the Stochastic Gradient Variational Bayes (SGVB) algorithm (Kingma and Welling). We propose training procedures to encourage neurons in the graphics code layer to have semantic meaning and force each group to distinctly represent a specific transformation (pose,light,texture,shape etc.). Given a static face image, our model can re-generate the input image with different pose, lighting or even texture and shape variations from the base face. We present qualitative and quantitative results of the model's efficacy to learn a 3D rendering engine. Moreover, we also utilize the learnt representation for two important visual recognition tasks: (1) an invariant face recognition task and (2) using the representation as a summary statistic for generative modeling.
+                    </h2>
+
+                    <p>
+                        <a href="http://arxiv-web3.library.cornell.edu/abs/1503.03167" class="pure-button pure-button-success">Get Paper</a>
+                        <a href="https://github.com/willwhitney/dc-ign" class="pure-button primary-button">Code</a> 
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="content">
+        <div class="pure-g-r content-ribbon">
+            <div class="pure-u-1-2">
+                <div class="l-box">
+                    <h3>Model Architecture</h3>
+                    <p>
+                    Deep Convolutional Inverse Graphics Network (DC-IGN) has an encoder and a decoder. We follow the variational autoencoder (Kingma and Welling) architecture with several variations. The encoder consists of several layers of convolutions followed by max-pooling and the decoder has several layers of unpooling (upsampling using nearest neighbors) followed by convolution. (a) During training, data (x) is passed through the encoder to produce the posterior approximation Q(z_i|x), where z_i consists of scene latent variables such as pose, light, texture or shape. In order to learn parameters in DC-IGN, gradients are backpropagated using stochastic gradient descent using the following variational object function: -log(P(x|z_i)) + KL(Q(z_i|x)||P(z_i)) for every z_i. We can force DC-IGN to learn a disentangled representation by showing mini-batches with a set of inactive and active transformations (eg face rotating, light sweeping in some direction etc). (b) During test, data x can be passed through the encoder to get latents z_i. Images can be re-rendered to different viewpoints, lighting conditions, shape variations etc by just manipulating the appropriate graphics code group (z_i), which is how one would manipulate an off the shelf 3D graphics engine.
+                    </p>
+                </div>
+            </div>
+
+            <div class="pure-u-1-2">
+                <div class="l-box">
+                    <img src="overview.png"
+                         alt="Placeholder image for example.">
+                </div>
+            </div>
+        </div>
+
+
+        <div class="l-box ribbon">
+            <a href="mailto:tejasdkulkarni@gmail.com" class="pure-button primary-button">Contact Us</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        MIT Computational Cognitive Sciences Group. Template borrowed from YUI Team and purecss.io 
+    </div>
+</div>
+
+<script src="http://yui.yahooapis.com/3.12.0/build/yui/yui-min.js"></script>
+<script>
+YUI().use('node-base', 'node-event-delegate', function (Y) {
+    // This just makes sure that the href="#" attached to the <a> elements
+    // don't scroll you back up the page.
+    Y.one('body').delegate('click', function (e) {
+        e.preventDefault();
+    }, 'a[href="#"]');
+});
+</script>
+
+
+
+</body>
+</html>
