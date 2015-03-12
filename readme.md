@@ -17,6 +17,9 @@ Project Website: http://willwhitney.github.io/dc-ign/www/
 - cudnn
 - cunn
 
+#### Acknowledgements
+We thank Thomas Vetter for giving us access to the Basel face model. T. Kulkarni was graciously supported by the Leventhal Fellowship. This research was supported by ONR award N000141310333, ARO MURI W911NF-13-1-2012 and CBMM.
+We would also like to thank (y0ast) https://github.com/y0ast for making the variational autoencoder code online.
 #### (Optional) Dataset
 
 
