@@ -1,16 +1,10 @@
 
 function load_batch(id, mode)
   res = torch.load('DATASET/th_' .. mode .. '/batch' .. id)
-  -- if ADDNOISE then
-  --   print("Adding noise\n")
-  --   res = res*0 --res[{{1,1,{1,150},{1,75}}}] = 1
-  -- end
   return res
-  -- return torch.load('/om/user/tejask/facegen/DATASET/th_' .. mode .. '/batch' .. id)
 end
 
 function load_mv_batch(id, dataset_name, mode)
-    -- return torch.load('CNN_DATASET/th_' .. dataset_name .. '/' .. mode .. '/batch' .. id)
     return torch.load(opt.datasetdir .. '/th_' .. dataset_name .. '/' .. mode .. '/batch' .. id)
 end
 
@@ -37,9 +31,8 @@ function load_random_mv_batch(mode)
 end
 
 -- has a bias towards shape samples
--- for training from scratch
 function load_random_mv_shape_bias_batch(mode)
-    local variation_type = math.random(opt.shape_bias_amount)
+    local variation_type = math.random(4 + opt.shape_bias_amount)
     local variation_name = ""
     if variation_type == 1 then
         variation_name = "AZ_VARIED"

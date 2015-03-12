@@ -11,7 +11,7 @@ require 'LinearCR'
 require 'Reparametrize'
 require 'cutorch'
 require 'cunn'
-require 'optim' 
+require 'optim'
 require 'GaussianCriterion'
 require 'testf'
 require 'utils'
@@ -24,7 +24,7 @@ local opt = lapp[[
    -n,--network       (default "")          reload pretrained network
    -m,--model         (default "convnet")   type of model tor train: convnet | mlp | linear
    -p,--plot                                plot while training
-   -o,--optimization  (default "SGD")       optimization: SGD | LBFGS 
+   -o,--optimization  (default "SGD")       optimization: SGD | LBFGS
    -r,--learningRate  (default 0.05)        learning rate, for SGD only
    -m,--momentum      (default 0)           momentum, for SGD only
    -i,--maxIter       (default 3)           maximum nb of iterations per batch, for LBFGS
@@ -33,8 +33,8 @@ local opt = lapp[[
    -t,--threads       (default 4)           number of threads
    --dumpTest                                preloads model and dumps .mat for test
    -d,--datasrc       (default "")          data source directory
-   -f,--fbmat         (default 0)           load fb.mattorch      
-   -c,--color         (default 0)           color or not 
+   -f,--fbmat         (default 0)           load fb.mattorch
+   -c,--color         (default 0)           color or not
    -u,--reuse	      (default 0)           reuse existing network weights
 ]]
 --[[
@@ -96,7 +96,7 @@ end
 parameters, gradients = model:getParameters()
 print('Num before', #parameters)
 
--- if opt.reuse == 1 then 
+-- if opt.reuse == 1 then
 --     print("Loading old parameters!")
 --     -- model = torch.load(opt.network)
 --     parameters = torch.load(opt.network)
@@ -123,9 +123,7 @@ else
   state = {}
 end
 
-
 print('Num of parameters:', #parameters)
-
 
 
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
@@ -141,11 +139,11 @@ while true do
 
         --Prepare Batch
         local batch = load_batch(i, MODE_TRAINING)
-      
+
          if opt.cuda then
             batch = batch:cuda()
-        end 
-        
+        end
+
         --Optimization function
         local opfunc = function(x)
             collectgarbage()
@@ -164,7 +162,7 @@ while true do
             local df_dw = criterion:backward(f, target):mul(-1)
 
             model:backward(batch,df_dw)
-            -- local encoder_output = model.modules[1].modules[11].output 
+            -- local encoder_output = model.modules[1].modules[11].output
             local encoder_output = model:get(1).output
 
             local KLDerr = KLD:forward(encoder_output, target)
@@ -183,7 +181,7 @@ while true do
                 print("lowerbound", lowerbound/batch:size(1))
             end
 
-            return lowerbound, gradients 
+            return lowerbound, gradients
         end
 
         x, batchlowerbound = rmsprop(opfunc, parameters, config, state)
