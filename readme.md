@@ -2,22 +2,22 @@
 
 This repository contains the code for the network described in http://arxiv.org/abs/1503.03167.
 
-[![Alt text for your video](http://img.youtube.com/vi/FpuhUaugAP0/0.jpg)](http://www.youtube.com/watch?v=FpuhUaugAP0)
+<!-- [![A DC-IGN lighting demo](http://i.imgur.com/ukoMSxt.gif)](http://www.youtube.com/watch?v=FpuhUaugAP0) -->
 
+![A DC-IGN lighting demo](http://i.imgur.com/ukoMSxt.gif)
 
-The `modules` directory contains the Torch7 modules we used.
-
-
+<!-- Click for the full video. -->
 
 ## Running
 
-### Torch7
+### Requirements
+#### Torch7
 
 - nn
 - cudnn
 - cunn
 
-### Dataset
+#### (Optional) Dataset
 
 
 
