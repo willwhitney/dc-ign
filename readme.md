@@ -26,7 +26,7 @@ Project Website: http://willwhitney.github.io/dc-ign/www/
 The train/test dataset along with a sample pre-trained network can be downloaded here:
 http://wednesday.csail.mit.edu/tejask/dcign/
 
-- main.lua can be used to train the network in a fully unsupervised way and monovariant_main.lua can be used to train the network with separated pose/light/shape etc (disentangled representations). We found that pre-training the network with main.lua followed by monovariant_main.lua gives better results. For details, please consule the paper.
+- main.lua can be used to train the network in a fully unsupervised way and monovariant_main.lua can be used to train the network with separated pose/light/shape etc (disentangled representations). We found that pre-training the network with main.lua followed by monovariant_main.lua gives better results. For details about the different training schemes, please refer to the paper.
 
 
 ## Paper abstract
