@@ -26,6 +26,8 @@ Project Website: http://willwhitney.github.io/dc-ign/www/
 **Dataset and pre-trained network**: The train/test dataset along with a sample pre-trained network can be downloaded here:
 http://wednesday.csail.mit.edu/tejask/dcign/
 
+Let us know if you run into trouble with anything!
+
 #### Training a network with separated pose/light/shape etc (disentangled representations)
 
 1. `git clone` this repo
