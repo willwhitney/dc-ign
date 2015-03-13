@@ -1,4 +1,4 @@
-require 'UnPooling'
+require 'modules/UnPooling'
 require 'cudnn'
 --Global variables for config
 bsize = 50
