@@ -19,7 +19,9 @@ Project Website: http://willwhitney.github.io/dc-ign/www/
 - [Torch7](http://torch.ch/)
 - The [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
 - [cuDNN](https://developer.nvidia.com/cuDNN): NVidia's NN library
-- [cudnn.torch](https://github.com/soumith/cudnn.torch): Torch bindings to cuDNN
+- [cudnn.torch](https://github.com/soumith/cudnn.torch): Torch bindings to cuDNN.
+
+Facebook has some great instructions for installing these over at https://github.com/facebook/fbcunn/blob/master/INSTALL.md
 
 ### Instructions
 
