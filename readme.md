@@ -15,16 +15,38 @@ Project Website: http://willwhitney.github.io/dc-ign/www/
 ## Running
 
 ### Requirements
+- A CUDA-capable GPU
 - [Torch7](http://torch.ch/)
+- The [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit)
 - [cuDNN](https://developer.nvidia.com/cuDNN): NVidia's NN library
 - [cudnn.torch](https://github.com/soumith/cudnn.torch): Torch bindings to cuDNN
-- A CUDA-capable GPU
 
 ### Instructions
-- **Dataset and pre-trained network**: The train/test dataset along with a sample pre-trained network can be downloaded here:
+
+**Dataset and pre-trained network**: The train/test dataset along with a sample pre-trained network can be downloaded here:
 http://wednesday.csail.mit.edu/tejask/dcign/
 
-- main.lua can be used to train the network in a fully unsupervised way and monovariant_main.lua can be used to train the network with separated pose/light/shape etc (disentangled representations). We found that pre-training the network with main.lua followed by monovariant_main.lua gives better results. For details about the different training schemes, please refer to the paper.
+#### Training a network with separated pose/light/shape etc (disentangled representations)
+
+1. `git clone` this repo
+1. [Download the dataset](http://wednesday.csail.mit.edu/tejask/dcign/) and unzip it.
+1. Grab a coffee while you wait for that to happen. It's pretty big.
+1. Run `th monovariant_main.lua --help` to see the available options.
+1. To train from scratch: 
+    1. run something like `th monovariant_main.lua --no_load --name my_first_dcign --datasetdir <path_to_dataset>`
+    1. [The network will save itself to `networks/<name>` after each epoch]
+    1. After a couple of epochs, open up `visualize_networks.lua` and set `network_search_str` to your network's name. Then you can run `th visualize_networks.lua` and it will create a folder called `renderings` with some visualizations of the kinds of faces your network generates.
+1. To use a pretrained network:
+    1. [Download the pretrained network](http://wednesday.csail.mit.edu/tejask/dcign/) and unzip it.
+    2. More coffee while you wait.
+    3. Run a command like `th monovariant_main.lua --import <path/to/unzipped/network/dir> --name my_first_dcign --datasetdir <path_to_dataset>` that imports the directory of that pretrained net.
+    4. Or, just do the `visualize_networks` thing from above with the pretrained network to see what it makes.
+
+#### Training a network with undifferentiated latents
+
+Instructions coming soon, but if you're not afraid of code that hasn't been cleaned up yet, check out `main.lua`.
+
+<!-- - main.lua can be used to train the network in a fully unsupervised way and monovariant_main.lua can be used to train the network with separated pose/light/shape etc (disentangled representations). We found that pre-training the network with main.lua followed by monovariant_main.lua gives better results. For details about the different training schemes, please refer to the paper. -->
 
 
 ## Paper abstract

@@ -39,7 +39,7 @@ network_search_str = "invariance_scaled"
 if false then
   base_directory = "/om/user/wwhitney/facegen"
 else
-  base_directory = lfs.currentdir()
+  base_directory = paths.concat(lfs.currentdir(), 'networks')
 end
 name_modifier_str = "sweep_pm_20"
 
