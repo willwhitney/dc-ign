@@ -1,18 +1,18 @@
--- Continue: th main.lua -t 1 -u 1 -n logs_init_network2_150/params.t7 -s logs_init_network2_150_run2
+--Basic Usage: th main.lua
+
 require 'sys'
 require 'xlua'
 require 'torch'
 require 'nn'
 require 'rmsprop'
 
-require 'KLDCriterion'
+require 'modules/KLDCriterion'
 
-require 'LinearCR'
-require 'Reparametrize'
+require 'modules/LinearCR'
+require 'modules/Reparametrize'
 require 'cutorch'
 require 'cunn'
 require 'optim'
-require 'GaussianCriterion'
 require 'testf'
 require 'utils'
 require 'config'
@@ -25,7 +25,7 @@ local opt = lapp[[
    -m,--model         (default "convnet")   type of model tor train: convnet | mlp | linear
    -p,--plot                                plot while training
    -o,--optimization  (default "SGD")       optimization: SGD | LBFGS
-   -r,--learningRate  (default 0.05)        learning rate, for SGD only
+   -r,--learningRate  (default 0.0005)        learning rate, for SGD only
    -m,--momentum      (default 0)           momentum, for SGD only
    -i,--maxIter       (default 3)           maximum nb of iterations per batch, for LBFGS
    --coefL1           (default 0)           L1 penalty on the weights
@@ -59,6 +59,14 @@ else
   MODE_TRAINING = 'training'
   MODE_TEST = 'test'
 end
+
+config = {
+    learningRate = -opt.learningRate, -- -0.0005,
+    momentumDecay = 0.1,
+    updateDecay = 0.01
+}
+
+print(config)
 
 
 print('IMWIDTH:', load_batch(1,MODE_TRAINING):size())
@@ -122,6 +130,7 @@ else
   epoch = 0
   state = {}
 end
+
 
 print('Num of parameters:', #parameters)
 

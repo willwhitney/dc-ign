@@ -1,3 +1,6 @@
+-- Basic Usage (from scratch): th main.lua --no_load
+-- Ideally preload model trained using main.lua
+
 require 'sys'
 require 'xlua'
 require 'torch'
@@ -7,7 +10,6 @@ require 'rmsprop'
 require 'modules/KLDCriterion'
 require 'modules/LinearCR'
 require 'modules/Reparametrize'
-require 'modules/GaussianCriterion'
 require 'modules/SelectiveOutputClamp'
 require 'modules/SelectiveGradientFilter'
 
