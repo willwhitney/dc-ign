@@ -17,9 +17,8 @@ Project Website: http://willwhitney.github.io/dc-ign/www/
 ### Requirements
 #### Torch7
 
-- nn
-- cudnn
-- cunn
+- [cuDNN](https://developer.nvidia.com/cuDNN): NVidia's NN library
+- [cudnn.torch](https://github.com/soumith/cudnn.torch): Torch bindings to cuDNN
 
 #### Instructions
 - Dataset and pre-trained network
