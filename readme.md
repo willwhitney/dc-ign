@@ -12,6 +12,17 @@ This repository contains the code for the network described in http://arxiv.org/
 
 <!-- Click for the full video. -->
 Project Website: http://willwhitney.github.io/dc-ign/www/
+
+## Citation 
+```
+@article{kulkarni2015deep,
+  title={Deep Convolutional Inverse Graphics Network},
+  author={Kulkarni, Tejas D and Whitney, Will and Kohli, Pushmeet and Tenenbaum, Joshua B},
+  journal={arXiv preprint arXiv:1503.03167},
+  year={2015}
+}
+```
+
 ## Running
 
 ### Requirements
