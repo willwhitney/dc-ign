@@ -61,7 +61,7 @@ cmd:text()
 
 opt = cmd:parse(arg)
 opt.save = paths.concat(opt.networks_dir, opt.name)
-os.execute('mkdir ' .. opt.save)
+os.execute('mkdir -p ' .. opt.save)
 
 config = {
     learningRate = opt.learning_rate,
