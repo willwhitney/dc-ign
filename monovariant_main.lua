@@ -239,7 +239,7 @@ while true do
 
 
   -- Compute the lowerbound of the test set and save it
-  testf_MV(false)
+  lowerbound_test = testf_MV(false)
   if true then
     if lowerbound_test_list then
       lowerbound_test_list = torch.cat(lowerbound_test_list
