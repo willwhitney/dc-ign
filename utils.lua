@@ -5,7 +5,9 @@ function load_batch(id, mode)
 end
 
 function load_mv_batch(id, dataset_name, mode)
-    return torch.load(opt.datasetdir .. '/th_' .. dataset_name .. '/' .. mode .. '/batch' .. id)
+    dataset =  '/th_' .. dataset_name .. '/' .. mode .. '/batch' .. id
+    print("loading: " .. dataset)
+    return torch.load(opt.datasetdir .. dataset)
 end
 
 function load_random_mv_batch(mode)
