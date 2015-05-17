@@ -43,6 +43,11 @@ cmd:option('--search_str', 'invariance_scaled', 'networks whose names contain th
 cmd:option('--base_dir',   'networks',          'absolute or relative path to networks')
 cmd:option('--name_mod',   'sweep_pm_20',       'suffix to give to jobname')
 cmd:option('--data_loc',   'data/faces/batch1', 'data location for generalization images')
+cmd:option('--imwidth',            150, 'width (and height) of images')
+cmd:option('--num_steps',            6,         'use code specific param upper/lower bounds')
+cmd:option('--lower_bound',        -20,         'lower bound for params')
+cmd:option('--upper_bound',         20,         'upper bound for params')
+cmd:option('--custom_bounds',    false,         'use special code specific upper/lower bounds')
 cmd:option('--reconstruct',      false,         'do reconstruction visualization')
 cmd:option('--generalize',       false,         'do generalization visualization')
 opt = cmd:parse(arg)
@@ -50,6 +55,11 @@ opt = cmd:parse(arg)
 network_search_str = opt.search_str
 base_directory = opt.base_dir
 name_modifier_str = opt.name_mod
+imwidth = opt.imwidth
+num_steps = opt.num_steps
+lower_bound = opt.lower_bound
+upper_bound = opt.upper_bound
+custom_bounds = opt.custom_bounds
 
 local jobname = network_search_str ..'_'.. os.date("%b_%d_%H_%M") ..'_'.. name_modifier_str
 
@@ -74,7 +84,7 @@ end
 function saveImageGrid(filepath, images)
   print("Saving " .. #images .. " image rows to " .. filepath)
   if images ~= nil and images[1] ~= nil then
-    image_width = 150
+    image_width = imwidth
     padding = 5
     images_across = #images[1]
     images_down = #images
@@ -178,14 +188,14 @@ if opt.generalize then
 
             local images = {}
 
-            local batch = torch.zeros(bsize,1,150,150)
+            local batch = torch.zeros(bsize,1,imwidth,imwidth)
             local image_index = 1
             for filename in lfs.dir(data_location) do
               print("filename: " .. filename)
               if string.sub(filename, string.len(filename) - 3, string.len(filename)) == ".png" then
                 local im_tmp = image.load(data_location .. "/" .. filename)
                 print("loading: " .. data_location .. "/" .. filename)
-                local im = torch.zeros(1,150, 150)
+                local im = torch.zeros(1,imwidth, imwidth)
                 im[1] = im_tmp[1]*0.21 + im_tmp[2]*0.72 + im_tmp[3]*0.07
                 local newim = image.scale(im[1], imwidth ,imwidth)
                 batch[image_index] = newim
@@ -203,6 +213,12 @@ if opt.generalize then
                 clamps[clampIndex].active = false
                 gradFilters[clampIndex].active = false
             end
+
+            custom_params_table = {
+              {-4, 5},
+              {0.5, 6},
+              {-1.5, 4}
+            }
             for dataset_index, dataset_type in ipairs({"AZ_VARIED", "EL_VARIED", "LIGHT_AZ_VARIED"}) do
 
               local rendered = model:forward(batch:cuda())
@@ -220,8 +236,16 @@ if opt.generalize then
                 table.insert(image_list, gt_image)
                 table.insert(image_list, inf_image)
 
-                -- for i=1,2 do
-                for i=-20, 20, 8 do
+                step_low = lower_bound
+                step_high = upper_bound
+                if(custom_bounds) then
+                  step_low = custom_params_table[dataset_index][1]
+                  step_high = custom_params_table[dataset_index][2]
+                end
+                for step = 1,num_steps do
+                  i = step_low + (((step-1) * (step_high - step_low)) / (num_steps - 1))
+                  -- print("Will render: " .. i .. " = " .. step_low .. "," .. step_high .. "," .. step)
+
                   local indxs = torch.Tensor({dataset_index})--torch.randperm(200)[{{1,10}}]
                   local repam_out = orig_repam_out:clone()
 
