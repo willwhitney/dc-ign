@@ -36,8 +36,8 @@ Facebook has some great instructions for installing these over at https://github
 
 ### Instructions
 
-**Dataset and pre-trained network**: The train/test dataset along with a sample pre-trained network can be downloaded here:
-http://wednesday.csail.mit.edu/tejask/dcign/
+**Dataset and pre-trained network**: The train/test dataset can be downloaded here:
+https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0
 
 Let us know if you run into trouble with anything!
 
