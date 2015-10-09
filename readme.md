@@ -39,12 +39,14 @@ Facebook has some great instructions for installing these over at https://github
 **Dataset and pre-trained network**: The train/test dataset can be downloaded here:
 https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0
 
+A pretrained network is also available if you just want to see the results: https://www.dropbox.com/s/brv92isfvd7o67k/pretrained_network.zip?dl=0
+
 Let us know if you run into trouble with anything!
 
 #### Training a network with separated pose/light/shape etc (disentangled representations)
 
 1. `git clone` this repo
-1. [Download the dataset](http://wednesday.csail.mit.edu/tejask/dcign/) and unzip it.
+1. [Download the dataset](https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0) and unzip it.
 1. Grab a coffee while you wait for that to happen. It's pretty big.
 1. Run `th monovariant_main.lua --help` to see the available options.
 1. To train from scratch: 
@@ -52,7 +54,7 @@ Let us know if you run into trouble with anything!
     1. [The network will save itself to `networks/<name>` after each epoch]
     1. After a couple of epochs, open up `visualize_networks.lua` and set `network_search_str` to your network's name. Then you can run `th visualize_networks.lua` and it will create a folder called `renderings` with some visualizations of the kinds of faces your network generates.
 1. To use a pretrained network:
-    1. [Download the pretrained network](http://wednesday.csail.mit.edu/tejask/dcign/) and unzip it.
+    1. [Download the pretrained network](https://www.dropbox.com/s/brv92isfvd7o67k/pretrained_network.zip?dl=0) and unzip it.
     2. More coffee while you wait.
     3. Run a command like `th monovariant_main.lua --import <path/to/unzipped/network/dir> --name my_first_dcign --datasetdir <path_to_dataset>` that imports the directory of that pretrained net.
     4. Or, just do the `visualize_networks` thing from above with the pretrained network to see what it makes.
