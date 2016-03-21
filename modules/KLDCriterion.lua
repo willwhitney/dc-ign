@@ -31,7 +31,7 @@ function KLDCriterion:updateOutput(input, target)
     self.term3:add(-1,self.term1)
 
     if self.sizeAverage then
-      self.term3:div(target:nElement())
+      self.term3:div(input[1]:nElement())
    end
 
     self.output = 0.5 * self.term3:sum()
@@ -53,6 +53,10 @@ function KLDCriterion:updateGradInput(input, target)
 
     -- (- sigma^2 + 1) * 0.5
     self.gradInput[2] = self.term:exp():mul(-1):add(1):mul(0.5)
+
+    if self.sizeAverage then
+        self.gradInput:div(input[1]:nElement())
+    end
 
     return self.gradInput
 end
