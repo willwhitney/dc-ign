@@ -37,7 +37,9 @@ Facebook has some great instructions for installing these over at https://github
 ### Instructions
 
 **Dataset and pre-trained network**: The train/test dataset can be downloaded here:
-https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0
+https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0 
+
+If we get too much traffic and Dropbox kills this link, please email me (wfwhitney@gmail.com) and I'll get it to you another way.
 
 A pretrained network is also available if you just want to see the results: https://www.dropbox.com/s/brv92isfvd7o67k/pretrained_network.zip?dl=0
 
