@@ -36,14 +36,12 @@ Facebook has some great instructions for installing these over at https://github
 
 ### Instructions
 
-**Dataset and pre-trained network**: The train/test dataset can be downloaded here:
-https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0 
+**Dataset and pre-trained network**: The train/test dataset can be downloaded [from Dropbox](https://www.dropbox.com/sh/zuyiuyehs6j5tin/AAALfTtR2Zlu5oFm2i63Rp3za?dl=0) or [Amazon S3](https://s3.amazonaws.com/willwhitney/dc-ign/dcign_facedataset_monovariant.zip). 
 
-If we get too much traffic and Dropbox kills this link, please email me (wfwhitney@gmail.com) and I'll get it to you another way.
+A pretrained network is also available if you just want to see the results: [Dropbox](https://www.dropbox.com/s/brv92isfvd7o67k/pretrained_network.zip?dl=0), [Amazon S3](https://s3.amazonaws.com/willwhitney/dc-ign/dcign_sample_trained.zip)
 
-A pretrained network is also available if you just want to see the results: https://www.dropbox.com/s/brv92isfvd7o67k/pretrained_network.zip?dl=0
+**Update** 06/23/16: We've been getting a bunch of traffic due to the (highly recommended!) [InfoGAN paper](https://arxiv.org/abs/1606.03657), so I've mirrored the files on S3. If neither Dropbox nor S3 works, please email me (wfwhitney@gmail.com) and I'll get it to you another way.
 
-Let us know if you run into trouble with anything!
 
 #### Training a network with separated pose/light/shape etc (disentangled representations)
 
