@@ -142,6 +142,8 @@ end
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0
 
+batch = opt.useCuda and torch.CudaTensor() or torch.FloatTensor()
+target = opt.useCuda and torch.CudaTensor() or torch.FloatTensor()
 while true do
   epoch = epoch + 1
   local lowerbound = 0
@@ -159,9 +161,9 @@ while true do
     -- 2. the type of batch it has selected (AZ, EL, LIGHT_AZ)
 
     if opt.shape_bias then
-      batch, dataset_type = load_random_mv_shape_bias_batch(MODE_TRAINING)
+      batchCPU, dataset_type = load_random_mv_shape_bias_batch(MODE_TRAINING)
     else
-      batch, dataset_type = load_random_mv_batch(MODE_TRAINING)
+      batchCPU, dataset_type = load_random_mv_batch(MODE_TRAINING)
     end
 
     -- set the clamp and gradient passthroughs
@@ -184,7 +186,11 @@ while true do
       gradFilters[clampIndex].active = true
     end
 
-    if opt.useCuda then batch = batch:cuda() end
+    if opt.useCuda then
+      batch:resize(batchCPU:size()):copy(batchCPU)
+    else
+      batch = batchCPU
+    end
 
     --Optimization function
     local opfunc = function(x)
@@ -197,7 +203,7 @@ while true do
       model:zeroGradParameters()
       local f = model:forward(batch)
 
-      local target = target or batch.new()
+      --local target = target or batch.new()
       target:resizeAs(f):copy(batch)
 
       local err = - criterion:forward(f, target)
