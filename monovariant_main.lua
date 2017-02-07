@@ -13,12 +13,12 @@ require 'modules/Reparametrize'
 require 'modules/SelectiveOutputClamp'
 require 'modules/SelectiveGradientFilter'
 
-require 'cutorch'
-require 'cunn'
 require 'optim'
 require 'testf'
 require 'utils'
 require 'config'
+
+torch.setdefaulttensortype('torch.FloatTensor')
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -59,11 +59,19 @@ cmd:option('--bsize',20,'number of samples per batch')
 
 -- cuda options
 cmd:option('--useCuda', false,'Use cuda')
+cmd:option('--useCudnn', false,'Use cudnn')
 cmd:option('--deviceId', 1,'which cuda device to use.')
 
 cmd:text()
 
 opt = cmd:parse(arg)
+
+if opt.useCuda then
+   require 'cutorch'
+   require 'cunn'
+   if opt.useCudnn then require 'cudnn' end
+end
+
 opt.save = paths.concat(opt.networks_dir, opt.name)
 os.execute('mkdir -p ' .. opt.save)
 
@@ -98,6 +106,7 @@ KLD = nn.KLDCriterion()
 KLD.sizeAverage = false
 
 if opt.useCuda then
+   if opt.useCudnn then cudnn.convert(model, cudnn) end
    cutorch.setDevice(opt.deviceId)
    criterion:cuda()
    KLD:cuda()
