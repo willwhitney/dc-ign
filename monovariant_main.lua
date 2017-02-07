@@ -57,6 +57,10 @@ cmd:option('--num_test_batches',1400,'number of batches to test with')
 cmd:option('--num_test_batches_per_type',350,'number of available test batches of each type')
 cmd:option('--bsize',20,'number of samples per batch')
 
+-- cuda options
+cmd:option('--useCuda', false,'Use cuda')
+cmd:option('--deviceId', 1,'which cuda device to use.')
+
 cmd:text()
 
 opt = cmd:parse(arg)
@@ -93,11 +97,14 @@ criterion.sizeAverage = false
 KLD = nn.KLDCriterion()
 KLD.sizeAverage = false
 
-criterion:cuda()
-KLD:cuda()
-model:cuda()
-cutorch.synchronize()
-
+if opt.useCuda then
+   cutorch.setDevice(opt.deviceId)
+   criterion:cuda()
+   KLD:cuda()
+   model:cuda()
+   cutorch.synchronize()
+end
+print(model)
 parameters, gradients = model:getParameters()
 print('Num before', #parameters)
 
@@ -168,7 +175,7 @@ while true do
       gradFilters[clampIndex].active = true
     end
 
-    batch = batch:cuda()
+    if opt.useCuda then batch = batch:cuda() end
 
     --Optimization function
     local opfunc = function(x)
@@ -265,4 +272,3 @@ while true do
     testLogger:plot()
   end
 end
-
