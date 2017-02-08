@@ -39,8 +39,9 @@ cmd:text('Visualize via reconstruction or generalization with params.')
 cmd:text()
 cmd:text('Options')
 cmd:text('Change these options:')
-cmd:option('--search_str', 'invariance_scaled', 'networks whose names contain this string will be rendered')
+cmd:option('--search_str', 'my_first_dcign', 'networks whose names contain this string will be rendered')
 cmd:option('--base_dir',   'networks',          'absolute or relative path to networks')
+cmd:option('--cnndataset_dir', '', 'CNNDATASET path')
 cmd:option('--name_mod',   'sweep_pm_20',       'suffix to give to jobname')
 cmd:option('--data_loc',   'data/faces/batch1', 'data location for generalization images')
 cmd:option('--imwidth',            150, 'width (and height) of images')
@@ -54,6 +55,8 @@ opt = cmd:parse(arg)
 
 network_search_str = opt.search_str
 base_directory = opt.base_dir
+CNN_DATASET = opt.cnndataset_dir
+assert(CNN_DATASET ~= '', 'Provide CNN_DATASET Path')
 name_modifier_str = opt.name_mod
 imwidth = opt.imwidth
 num_steps = opt.num_steps
@@ -118,7 +121,6 @@ if opt.reconstruct then
   local id=1
   for network_name in lfs.dir(base_directory) do
     local network_path = base_directory .. '/' .. network_name
-    -- print("SO:", network_path)
     if lfs.attributes(network_path).mode == 'directory' then
       if string.find(network_name, network_search_str) then
         print(network_name)
@@ -128,7 +130,8 @@ if opt.reconstruct then
           if lfs.attributes(base_directory ..'/tmp/'..network_name.."/"..dataset_type) ~= nil then
             local last_epoch = lastepochnum(base_directory ..'/tmp/'..network_name.."/"..dataset_type)
 
-            local reconstruction_gt = torch.load('CNN_DATASET/th_'..dataset_type..'/FT_test/batch' .. id)
+            local reconstruction_gt = torch.load(paths.concat(CNN_DATASET,
+'th_'..dataset_type..'/FT_test/batch' .. id))
             local preds = torch.load(base_directory ..'/tmp/'..network_name.."/"..dataset_type.."/epoch_"..last_epoch..'/preds' ..id)
 
 
