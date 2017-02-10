@@ -60,7 +60,7 @@ cmd:option('--bsize',20,'number of samples per batch')
 -- cuda options
 cmd:option('--useCuda', false,'Use cuda')
 cmd:option('--useCudnn', false,'Use cudnn')
-cmd:option('--deviceId', 1,'which cuda device to use.')
+cmd:option('--deviceId', 1, 'which cuda device to use.')
 
 cmd:text()
 
@@ -71,6 +71,8 @@ if opt.useCuda then
    require 'cunn'
    if opt.useCudnn then require 'cudnn' end
 end
+
+if opt.useCudnn then assert(opt.useCuda, 'Please enable useCuda as well') end
 
 opt.save = paths.concat(opt.networks_dir, opt.name)
 os.execute('mkdir -p ' .. opt.save)

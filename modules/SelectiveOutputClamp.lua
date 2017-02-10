@@ -66,6 +66,7 @@ function SelectiveOutputClamp:reset()
 end
 
 function SelectiveOutputClamp:updateOutput(input)
+    self.output = self.output or input.new()
     self.output:resizeAs(input):copy(input)
     if self.active then
         for i = 1, input:size()[1] do
@@ -81,6 +82,7 @@ function SelectiveOutputClamp:updateOutput(input)
 end
 
 function SelectiveOutputClamp:updateGradInput(input, gradOutput)
-    self.gradInput = gradOutput
+    self.gradInput = self.gradInput or gradOutput.new()
+    self.gradInput:resizeAs(gradOutput):copy(gradOutput)
     return self.gradInput
 end
