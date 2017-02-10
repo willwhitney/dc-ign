@@ -60,7 +60,7 @@ A pretrained network is also available if you just want to see the results: [Dro
     4. Or, just do the `visualize_networks` thing from above with the pretrained network to see what it makes.
 1. The default will run on CPU, to enable cuda please do following
    1. ` --useCuda --deviceId deviceToUse` : Default deviceId is `1`.
-   1. For cudnn use ` --useCuda useCudnn --deviceId deviceToUse`.
+   1. For cudnn use ` --useCuda --useCudnn --deviceId deviceToUse`.
 
 #### Training a network with undifferentiated latents
 
