@@ -12,4 +12,3 @@ function LinearCR:reset()
     self.weight:normal(0, sigmaInit)
     self.bias:normal(0, sigmaInit)
 end
-

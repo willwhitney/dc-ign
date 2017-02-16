@@ -13,12 +13,12 @@ require 'modules/Reparametrize'
 require 'modules/SelectiveOutputClamp'
 require 'modules/SelectiveGradientFilter'
 
-require 'cutorch'
-require 'cunn'
 require 'optim'
 require 'testf'
 require 'utils'
 require 'config'
+
+torch.setdefaulttensortype('torch.FloatTensor')
 
 cmd = torch.CmdLine()
 cmd:text()
@@ -57,9 +57,23 @@ cmd:option('--num_test_batches',1400,'number of batches to test with')
 cmd:option('--num_test_batches_per_type',350,'number of available test batches of each type')
 cmd:option('--bsize',20,'number of samples per batch')
 
+-- cuda options
+cmd:option('--useCuda', false,'Use cuda')
+cmd:option('--useCudnn', false,'Use cudnn')
+cmd:option('--deviceId', 1, 'which cuda device to use.')
+
 cmd:text()
 
 opt = cmd:parse(arg)
+
+if opt.useCuda then
+   require 'cutorch'
+   require 'cunn'
+   if opt.useCudnn then require 'cudnn' end
+end
+
+if opt.useCudnn then assert(opt.useCuda, 'Please enable useCuda as well') end
+
 opt.save = paths.concat(opt.networks_dir, opt.name)
 os.execute('mkdir -p ' .. opt.save)
 
@@ -93,11 +107,15 @@ criterion.sizeAverage = false
 KLD = nn.KLDCriterion()
 KLD.sizeAverage = false
 
-criterion:cuda()
-KLD:cuda()
-model:cuda()
-cutorch.synchronize()
-
+if opt.useCuda then
+   if opt.useCudnn then cudnn.convert(model, cudnn) end
+   cutorch.setDevice(opt.deviceId)
+   criterion:cuda()
+   KLD:cuda()
+   model:cuda()
+   cutorch.synchronize()
+end
+print(model)
 parameters, gradients = model:getParameters()
 print('Num before', #parameters)
 
@@ -126,6 +144,8 @@ end
 testLogger = optim.Logger(paths.concat(opt.save, 'test.log'))
 reconstruction = 0
 
+batch = opt.useCuda and torch.CudaTensor() or torch.FloatTensor()
+target = opt.useCuda and torch.CudaTensor() or torch.FloatTensor()
 while true do
   epoch = epoch + 1
   local lowerbound = 0
@@ -143,9 +163,9 @@ while true do
     -- 2. the type of batch it has selected (AZ, EL, LIGHT_AZ)
 
     if opt.shape_bias then
-      batch, dataset_type = load_random_mv_shape_bias_batch(MODE_TRAINING)
+      batchCPU, dataset_type = load_random_mv_shape_bias_batch(MODE_TRAINING)
     else
-      batch, dataset_type = load_random_mv_batch(MODE_TRAINING)
+      batchCPU, dataset_type = load_random_mv_batch(MODE_TRAINING)
     end
 
     -- set the clamp and gradient passthroughs
@@ -168,7 +188,11 @@ while true do
       gradFilters[clampIndex].active = true
     end
 
-    batch = batch:cuda()
+    if opt.useCuda then
+      batch:resize(batchCPU:size()):copy(batchCPU)
+    else
+      batch = batchCPU
+    end
 
     --Optimization function
     local opfunc = function(x)
@@ -181,7 +205,7 @@ while true do
       model:zeroGradParameters()
       local f = model:forward(batch)
 
-      local target = target or batch.new()
+      --local target = target or batch.new()
       target:resizeAs(f):copy(batch)
 
       local err = - criterion:forward(f, target)
@@ -265,4 +289,3 @@ while true do
     testLogger:plot()
   end
 end
-

@@ -66,40 +66,23 @@ function SelectiveOutputClamp:reset()
 end
 
 function SelectiveOutputClamp:updateOutput(input)
+    self.output = self.output or input.new()
+    self.output:resizeAs(input):copy(input)
     if self.active then
-        self.output = input:clone()
         for i = 1, input:size()[1] do
-            self.output[i] = input[1]:clone()
+            self.output[i]:copy(input[1])
         end
 
         if self.passthrough ~= nil then
            self.output[{{}, self.passthrough}] = input[{{}, self.passthrough}]
         end
-    else
-        self.output = input:clone()
     end
 
     return self.output
 end
 
 function SelectiveOutputClamp:updateGradInput(input, gradOutput)
-    self.gradInput = gradOutput
+    self.gradInput = self.gradInput or gradOutput.new()
+    self.gradInput:resizeAs(gradOutput):copy(gradOutput)
     return self.gradInput
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

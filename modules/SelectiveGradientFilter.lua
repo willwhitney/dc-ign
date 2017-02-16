@@ -99,21 +99,3 @@ function SelectiveGradientFilter:updateGradInput(input, gradOutput)
 
     return self.gradInput
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
